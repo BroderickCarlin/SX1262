@@ -1,17 +1,20 @@
 [package]
-name = "template"
-description = "A basic template for Rust projects"
+name = "sx126x"
+description = "A embedded-hal driver for the Semtech SX1261/2 sub-GHz radio transceiver"
 version = "0.1.0"
 edition = "2021"
 authors = ["Broderick Carlin <broderick.carlin@gmail.com>"]
 readme = "README.md"
-repository = "https://github.com/BroderickCarlin/template-rust"
+repository = "https://github.com/BroderickCarlin/SX1261"
 license = "MIT OR Apache-2.0"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+keywords = ["embedded", "radio", "lora", "semtech", "no-std"]
+categories = ["embedded", "hardware-support", "no-std"]
 
 [dependencies]
+defmt = { version = "0.3", optional = true }
+embedded-hal = "1.0.0-alpha.11"
+regiface = "0.2"
 
-[dev-dependencies]
-tinybmp = "0.5"
-embedded-graphics-simulator = "0.6"
+[features]
+default = []
+defmt = ["dep:defmt"]
