@@ -1,5 +1,5 @@
 [package]
-name = "sx126x"
+name = "sx1262"
 description = "A embedded-hal driver for the Semtech SX1261/2 sub-GHz radio transceiver"
 version = "0.1.0"
 edition = "2021"
