@@ -12,7 +12,7 @@
 //!
 //! Most configuration commands must be issued while in STDBY_RC mode.
 
-use std::convert::Infallible;
+use core::convert::Infallible;
 
 use regiface::FromByteArray;
 

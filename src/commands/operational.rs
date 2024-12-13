@@ -13,7 +13,7 @@
 //! Mode transitions have specific timing requirements detailed in
 //! the documentation for each command.
 
-use std::convert::Infallible;
+use core::convert::Infallible;
 
 use crate::{Command, NoParameters, ToByteArray};
 

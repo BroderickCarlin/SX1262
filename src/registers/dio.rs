@@ -16,7 +16,7 @@
 //! - Sleep: DIOs high impedance with weak pull-down
 //! - Active modes: DIOs configured as per registers
 
-use std::convert::Infallible;
+use core::convert::Infallible;
 
 use regiface::{register, FromByteArray, ReadableRegister, ToByteArray, WritableRegister};
 

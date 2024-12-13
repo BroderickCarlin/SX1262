@@ -10,7 +10,7 @@
 //! Each interrupt can be mapped to any DIO pin, and multiple interrupts
 //! can be mapped to the same pin (OR function).
 
-use std::convert::Infallible;
+use core::convert::Infallible;
 
 use crate::{Command, NoParameters, ToByteArray};
 

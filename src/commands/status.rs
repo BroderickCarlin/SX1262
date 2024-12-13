@@ -10,7 +10,7 @@
 //! These commands can be used to monitor device operation and
 //! diagnose issues during development and operation.
 
-use std::convert::Infallible;
+use core::convert::Infallible;
 
 use regiface::FromByteArray;
 

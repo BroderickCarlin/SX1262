@@ -1,3 +1,4 @@
+#![no_std]
 //! SX126x Radio Driver
 //!
 //! This crate provides a type-safe interface for the Semtech SX1261/2 sub-GHz radio transceivers.

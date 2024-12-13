@@ -8,7 +8,7 @@
 //! These registers control fundamental timing and system behavior of the device.
 //! Proper configuration is essential for reliable operation.
 
-use std::convert::Infallible;
+use core::convert::Infallible;
 
 use regiface::{register, FromByteArray, ReadableRegister, ToByteArray, WritableRegister};
 

@@ -7,7 +7,7 @@
 //! - Power amplifier configuration
 //! - Over-current protection
 
-use std::convert::Infallible;
+use core::convert::Infallible;
 
 use regiface::{register, FromByteArray, ReadableRegister, ToByteArray, WritableRegister};
 

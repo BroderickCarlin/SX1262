@@ -10,7 +10,7 @@
 //! These registers are used in conjunction with the packet parameters commands
 //! to define the complete packet format.
 
-use std::convert::Infallible;
+use core::convert::Infallible;
 
 use regiface::{register, FromByteArray, ReadableRegister, ToByteArray, WritableRegister};
 
