@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1](https://github.com/BroderickCarlin/SX1262/compare/v0.1.0...v0.1.1) - 2024-12-13
+
+### Fixed
+
+- Remove std dependencies and mark crate as no_std
+
 ## [0.1.0](https://github.com/BroderickCarlin/SX1262/releases/tag/v0.1.0) - 2024-12-09
 
 ### Added
