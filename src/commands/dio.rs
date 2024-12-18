@@ -12,7 +12,50 @@
 
 use core::convert::Infallible;
 
-use crate::{Command, NoParameters, ToByteArray};
+use crate::{Command, FromByteArray, NoParameters, ToByteArray};
+
+bitflags::bitflags! {
+    /// IRQ flags for the SX126x radio
+    #[derive(Debug, Clone, Copy)]
+    pub struct IrqMask: u16 {
+        /// Packet transmission completed
+        const TX_DONE = 1 << 0;
+        /// Packet received
+        const RX_DONE = 1 << 1;
+        /// Preamble detected
+        const PREAMBLE_DETECTED = 1 << 2;
+        /// Valid sync word detected (FSK) / Valid header received (LoRa)
+        const SYNC_WORD_VALID = 1 << 3;
+        /// Header CRC error (LoRa)
+        const HEADER_ERROR = 1 << 4;
+        /// Payload CRC error
+        const CRC_ERROR = 1 << 5;
+        /// Channel activity detection finished
+        const CAD_DONE = 1 << 6;
+        /// Channel activity detected
+        const CAD_DETECTED = 1 << 7;
+        /// RX or TX timeout
+        const TIMEOUT = 1 << 8;
+    }
+}
+
+impl ToByteArray for IrqMask {
+    type Error = Infallible;
+    type Array = [u8; 2];
+
+    fn to_bytes(self) -> Result<Self::Array, Self::Error> {
+        Ok(self.bits().to_be_bytes())
+    }
+}
+
+impl FromByteArray for IrqMask {
+    type Error = Infallible;
+    type Array = [u8; 2];
+
+    fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
+        Ok(IrqMask::from_bits_truncate(u16::from_be_bytes(bytes)))
+    }
+}
 
 /// DIO and IRQ configuration parameters
 ///
@@ -21,34 +64,21 @@ use crate::{Command, NoParameters, ToByteArray};
 #[derive(Debug, Clone, Copy)]
 pub struct DioIrqConfig {
     /// IRQ enable mask
-    /// Each bit enables/disables a specific interrupt:
-    /// - Bit 0: TxDone
-    /// - Bit 1: RxDone
-    /// - Bit 2: PreambleDetected
-    /// - Bit 3: SyncWordValid (FSK) / HeaderValid (LoRa)
-    /// - Bit 4: HeaderError (LoRa)
-    /// - Bit 5: CrcError
-    /// - Bit 6: CadDone
-    /// - Bit 7: CadDetected
-    /// - Bit 8: Timeout
-    pub irq_mask: u16,
+    pub irq_mask: IrqMask,
 
     /// DIO1 interrupt mapping mask
-    /// Same bit definitions as irq_mask
     /// IRQ appears on DIO1 if corresponding bits set in both masks
-    pub dio1_mask: u16,
+    pub dio1_mask: IrqMask,
 
     /// DIO2 interrupt mapping mask
-    /// Same bit definitions as irq_mask
     /// IRQ appears on DIO2 if corresponding bits set in both masks
     /// Ignored if DIO2 configured for RF switch control
-    pub dio2_mask: u16,
+    pub dio2_mask: IrqMask,
 
     /// DIO3 interrupt mapping mask
-    /// Same bit definitions as irq_mask
     /// IRQ appears on DIO3 if corresponding bits set in both masks
     /// Ignored if DIO3 configured for TCXO control
-    pub dio3_mask: u16,
+    pub dio3_mask: IrqMask,
 }
 
 impl ToByteArray for DioIrqConfig {
@@ -57,10 +87,10 @@ impl ToByteArray for DioIrqConfig {
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
         let mut bytes = [0u8; 8];
-        bytes[0..2].copy_from_slice(&self.irq_mask.to_be_bytes());
-        bytes[2..4].copy_from_slice(&self.dio1_mask.to_be_bytes());
-        bytes[4..6].copy_from_slice(&self.dio2_mask.to_be_bytes());
-        bytes[6..8].copy_from_slice(&self.dio3_mask.to_be_bytes());
+        bytes[0..2].copy_from_slice(&self.irq_mask.bits().to_be_bytes());
+        bytes[2..4].copy_from_slice(&self.dio1_mask.bits().to_be_bytes());
+        bytes[4..6].copy_from_slice(&self.dio2_mask.bits().to_be_bytes());
+        bytes[6..8].copy_from_slice(&self.dio3_mask.bits().to_be_bytes());
         Ok(bytes)
     }
 }
@@ -98,7 +128,7 @@ impl Command for SetDioIrqParams {
 ///
 /// Returns the current state of all interrupt flags.
 /// Each bit corresponds to an interrupt source as defined
-/// in DioIrqConfig::irq_mask.
+/// in IrqMask.
 ///
 /// # Important Notes
 /// - Flags remain set until explicitly cleared
@@ -110,7 +140,7 @@ pub struct GetIrqStatus;
 impl Command for GetIrqStatus {
     type IdType = u8;
     type CommandParameters = NoParameters;
-    type ResponseParameters = u16;
+    type ResponseParameters = IrqMask;
 
     fn id() -> Self::IdType {
         0x12
@@ -118,26 +148,6 @@ impl Command for GetIrqStatus {
 
     fn invoking_parameters(self) -> Self::CommandParameters {
         NoParameters::default()
-    }
-}
-
-/// IRQ clear configuration
-///
-/// Specifies which interrupt flags to clear.
-#[derive(Debug, Clone, Copy)]
-pub struct ClearIrqConfig {
-    /// IRQ clear mask
-    /// Set bits indicate which flags to clear
-    /// Same bit definitions as DioIrqConfig::irq_mask
-    pub irq_mask: u16,
-}
-
-impl ToByteArray for ClearIrqConfig {
-    type Error = Infallible;
-    type Array = [u8; 2];
-
-    fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        Ok(self.irq_mask.to_be_bytes())
     }
 }
 
@@ -151,13 +161,13 @@ impl ToByteArray for ClearIrqConfig {
 /// - Clearing flag removes it from IRQ register and DIO
 #[derive(Debug, Clone)]
 pub struct ClearIrqStatus {
-    /// Clear configuration specifying which flags to clear
-    pub config: ClearIrqConfig,
+    /// IRQ flags to clear
+    pub irq_mask: IrqMask,
 }
 
 impl Command for ClearIrqStatus {
     type IdType = u8;
-    type CommandParameters = ClearIrqConfig;
+    type CommandParameters = IrqMask;
     type ResponseParameters = NoParameters;
 
     fn id() -> Self::IdType {
@@ -165,7 +175,7 @@ impl Command for ClearIrqStatus {
     }
 
     fn invoking_parameters(self) -> Self::CommandParameters {
-        self.config
+        self.irq_mask
     }
 }
 

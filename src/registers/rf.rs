@@ -52,46 +52,59 @@ impl Default for TxModulation {
     }
 }
 
+/// Error type for RX gain mode conversion
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct InvalidGainMode(pub u8);
+
 /// RX gain register (address: 0x08AC)
 ///
 /// Controls the receiver gain configuration, allowing tradeoff between power consumption
 /// and sensitivity. The gain mode affects both power consumption and receiver sensitivity:
 ///
-/// # Power Saving Mode (0x94)
-/// - Lower power consumption
+/// # Power Saving Mode
+/// - Lower power consumption (~4.2mA in DC-DC mode)
 /// - Reduced sensitivity (~3dB worse than boosted)
 ///
-/// # Boosted Mode (0x96)
-/// - Higher power consumption
+/// # Boosted Mode
+/// - Higher power consumption (~4.8mA in DC-DC mode)
 /// - Maximum sensitivity
 ///
 /// Note: The RX Gain setting is not retained when waking from sleep mode. To include this
 /// register in retention memory, additional configuration is required.
 #[register(0x08ACu16)]
 #[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
-pub struct RxGain {
-    /// Gain mode configuration
-    /// - 0x94 = Power saving gain (~4.2mA in DC-DC mode)
-    /// - 0x96 = Boosted gain (~4.8mA in DC-DC mode)
-    pub mode: u8,
+pub enum RxGain {
+    /// Power saving gain mode (~4.2mA in DC-DC mode)
+    /// Lower power consumption but reduced sensitivity
+    PowerSaving,
+    /// Boosted gain mode (~4.8mA in DC-DC mode)
+    /// Maximum sensitivity but higher power consumption
+    Boosted,
 }
 
 impl Default for RxGain {
     fn default() -> Self {
-        Self {
-            mode: Self::POWER_SAVING,
-        }
+        Self::PowerSaving
     }
 }
 
 impl RxGain {
-    /// Power saving gain mode value (0x94)
-    /// Lower power consumption but reduced sensitivity
-    pub const POWER_SAVING: u8 = 0x94;
+    /// Convert a raw byte value to RxGainMode
+    pub fn from_byte(value: u8) -> Result<Self, InvalidGainMode> {
+        match value {
+            0x94 => Ok(Self::PowerSaving),
+            0x96 => Ok(Self::Boosted),
+            invalid => Err(InvalidGainMode(invalid)),
+        }
+    }
 
-    /// Boosted gain mode value (0x96)
-    /// Maximum sensitivity but higher power consumption
-    pub const BOOSTED: u8 = 0x96;
+    /// Convert RxGainMode to its raw byte value
+    pub fn to_byte(self) -> u8 {
+        match self {
+            Self::PowerSaving => 0x94,
+            Self::Boosted => 0x96,
+        }
+    }
 }
 
 /// TX clamp configuration register (address: 0x08D8)
@@ -185,11 +198,11 @@ impl ToByteArray for TxModulation {
 }
 
 impl FromByteArray for RxGain {
-    type Error = Infallible;
+    type Error = InvalidGainMode;
     type Array = [u8; 1];
 
     fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
-        Ok(Self { mode: bytes[0] })
+        Self::from_byte(bytes[0])
     }
 }
 
@@ -198,7 +211,7 @@ impl ToByteArray for RxGain {
     type Array = [u8; 1];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        Ok([self.mode])
+        Ok([self.to_byte()])
     }
 }
 

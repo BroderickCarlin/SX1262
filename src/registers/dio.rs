@@ -113,6 +113,11 @@ pub struct DioPullDownControl {
     pub dio3: bool,
 }
 
+#[derive(Debug)]
+pub struct InvalidVoltageError {
+    pub value: u8,
+}
+
 /// DIO3 output voltage control register (address: 0x0920)
 ///
 /// Controls the regulated voltage output on DIO3 when used for TCXO control.
@@ -125,17 +130,23 @@ pub struct DioPullDownControl {
 /// - Used in conjunction with SetDIO3AsTCXOCtrl command
 #[register(0x0920u16)]
 #[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
-pub struct Dio3OutputVoltage {
-    /// TCXO supply voltage selection
-    /// - 0x00 = 1.6V (min VBAT = 1.8V)
-    /// - 0x01 = 1.7V (min VBAT = 1.9V)
-    /// - 0x02 = 1.8V (min VBAT = 2.0V)
-    /// - 0x03 = 2.2V (min VBAT = 2.4V)
-    /// - 0x04 = 2.4V (min VBAT = 2.6V)
-    /// - 0x05 = 2.7V (min VBAT = 2.9V)
-    /// - 0x06 = 3.0V (min VBAT = 3.2V)
-    /// - 0x07 = 3.3V (min VBAT = 3.5V)
-    pub voltage: u8,
+pub enum Dio3OutputVoltage {
+    /// (min VBAT = 1.8V)
+    V1_6 = 0x00,
+    /// (min VBAT = 1.9V)
+    V1_7 = 0x01,
+    /// (min VBAT = 2.0V)
+    V1_8 = 0x02,
+    /// (min VBAT = 2.4V)
+    V2_2 = 0x03,
+    /// (min VBAT = 2.6V)
+    V2_4 = 0x04,
+    /// (min VBAT = 2.9V)
+    V2_7 = 0x05,
+    /// (min VBAT = 3.2V)
+    V3_0 = 0x06,
+    /// (min VBAT = 3.5V)
+    V3_3 = 0x07,
 }
 
 impl FromByteArray for DioOutputEnable {
@@ -227,13 +238,21 @@ impl ToByteArray for DioPullDownControl {
 }
 
 impl FromByteArray for Dio3OutputVoltage {
-    type Error = Infallible;
+    type Error = InvalidVoltageError;
     type Array = [u8; 1];
 
     fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
-        Ok(Self {
-            voltage: bytes[0] & 0x07,
-        })
+        match bytes[0] & 0x07 {
+            0x00 => Ok(Self::V1_6),
+            0x01 => Ok(Self::V1_7),
+            0x02 => Ok(Self::V1_8),
+            0x03 => Ok(Self::V2_2),
+            0x04 => Ok(Self::V2_4),
+            0x05 => Ok(Self::V2_7),
+            0x06 => Ok(Self::V3_0),
+            0x07 => Ok(Self::V3_3),
+            invalid => Err(InvalidVoltageError { value: invalid }),
+        }
     }
 }
 
@@ -242,6 +261,6 @@ impl ToByteArray for Dio3OutputVoltage {
     type Array = [u8; 1];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        Ok([self.voltage & 0x07])
+        Ok([self as u8])
     }
 }

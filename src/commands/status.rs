@@ -16,30 +16,144 @@ use regiface::FromByteArray;
 
 use crate::{Command, NoParameters};
 
+/// Error type for invalid operating mode values
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum OperatingModeError {
+    /// The value does not correspond to a valid operating mode
+    InvalidValue(u8),
+}
+
+/// Error type for invalid command status values
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum CommandStatusError {
+    /// The value does not correspond to a valid command status
+    InvalidValue(u8),
+}
+
+/// Error type for status byte parsing
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum StatusError {
+    /// Error extracting operating mode from status byte
+    InvalidMode(OperatingModeError),
+    /// Error extracting command status from status byte
+    InvalidCommandStatus(CommandStatusError),
+}
+
+/// Operating mode of the device
+///
+/// Represents the current state of the radio's state machine.
+/// Extracted from status byte bits 6:4.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum OperatingMode {
+    /// STDBY_RC mode: RC oscillator running
+    StandbyRc = 0x2,
+    /// STDBY_XOSC mode: Crystal oscillator running
+    StandbyXosc = 0x3,
+    /// FS mode: Frequency synthesizer running
+    FrequencySynthesizer = 0x4,
+    /// RX mode: Receiving packets
+    Receive = 0x5,
+    /// TX mode: Transmitting packets
+    Transmit = 0x6,
+}
+
+impl TryFrom<u8> for OperatingMode {
+    type Error = OperatingModeError;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            0x2 => Ok(Self::StandbyRc),
+            0x3 => Ok(Self::StandbyXosc),
+            0x4 => Ok(Self::FrequencySynthesizer),
+            0x5 => Ok(Self::Receive),
+            0x6 => Ok(Self::Transmit),
+            invalid => Err(OperatingModeError::InvalidValue(invalid)),
+        }
+    }
+}
+
+/// Command processing status
+///
+/// Indicates the result of the last command execution.
+/// Extracted from status byte bits 3:1.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum CommandStatus {
+    /// Data is available to be read from the radio
+    DataAvailable = 0x2,
+    /// Command timed out during execution
+    Timeout = 0x3,
+    /// Error occurred during command processing
+    ProcessingError = 0x4,
+    /// Command execution failed
+    ExecutionFailure = 0x5,
+    /// TX operation completed successfully
+    TxDone = 0x6,
+}
+
+impl TryFrom<u8> for CommandStatus {
+    type Error = CommandStatusError;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            0x2 => Ok(Self::DataAvailable),
+            0x3 => Ok(Self::Timeout),
+            0x4 => Ok(Self::ProcessingError),
+            0x5 => Ok(Self::ExecutionFailure),
+            0x6 => Ok(Self::TxDone),
+            invalid => Err(CommandStatusError::InvalidValue(invalid)),
+        }
+    }
+}
+
+/// Device status information
+///
+/// Contains the current operating mode and command processing status.
+/// Returned by GetStatus command.
+///
+/// # Status Byte Format
+/// - Bits 7: Reserved
+/// - Bits 6:4: Operating mode
+/// - Bits 3:1: Command status
+/// - Bits 0: Reserved
+#[derive(Debug, Clone, Copy)]
+pub struct Status {
+    /// Current operating mode of the device
+    pub mode: OperatingMode,
+    /// Status of the last command execution
+    pub cmd_status: CommandStatus,
+}
+
+impl FromByteArray for Status {
+    type Error = StatusError;
+    type Array = [u8; 1];
+
+    fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
+        let mode = (bytes[0] >> 4) & 0x7;
+        let cmd = (bytes[0] >> 1) & 0x7;
+
+        Ok(Self {
+            mode: OperatingMode::try_from(mode).map_err(StatusError::InvalidMode)?,
+            cmd_status: CommandStatus::try_from(cmd).map_err(StatusError::InvalidCommandStatus)?,
+        })
+    }
+}
+
 /// GetStatus command (0xC0)
 ///
-/// Returns the current device status including:
-/// - Operating mode (bits 6:4)
-///   - 0x0: Unused
-///   - 0x2: STDBY_RC
-///   - 0x3: STDBY_XOSC
-///   - 0x4: FS
-///   - 0x5: RX
-///   - 0x6: TX
-/// - Command status (bits 3:1)
-///   - 0x0: Reserved
-///   - 0x2: Data available
-///   - 0x3: Command timeout
-///   - 0x4: Command processing error
-///   - 0x5: Failure to execute
-///   - 0x6: TX done
+/// Returns the current device status including operating mode and command status.
+///
+/// # Important Notes
+/// - Operating mode indicates current radio state
+/// - Command status shows result of last command
+/// - Use to monitor device state and detect errors
+/// - Helpful for debugging communication issues
 #[derive(Debug, Clone)]
 pub struct GetStatus;
 
 impl Command for GetStatus {
     type IdType = u8;
     type CommandParameters = NoParameters;
-    type ResponseParameters = u8;
+    type ResponseParameters = Status;
 
     fn id() -> Self::IdType {
         0xC0

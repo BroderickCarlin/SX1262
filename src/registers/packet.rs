@@ -30,20 +30,14 @@ use regiface::{register, FromByteArray, ReadableRegister, ToByteArray, WritableR
 #[register(0x06B8u16)]
 #[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
 pub struct WhiteningInitialValue {
-    /// Initial value for whitening LFSR [15:8]
-    /// Default: 0x01
-    pub msb: u8,
-    /// Initial value for whitening LFSR [7:0]
-    /// Default: 0x00
-    pub lsb: u8,
+    /// Initial value for whitening LFSR
+    /// Default: 0x0100
+    pub value: u16,
 }
 
 impl Default for WhiteningInitialValue {
     fn default() -> Self {
-        Self {
-            msb: 0x01,
-            lsb: 0x00,
-        }
+        Self { value: 0x0100 }
     }
 }
 
@@ -60,20 +54,14 @@ impl Default for WhiteningInitialValue {
 #[register(0x06BCu16)]
 #[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
 pub struct CrcInitialValue {
-    /// Initial CRC value [15:8]
-    /// Default: 0x1D
-    pub msb: u8,
-    /// Initial CRC value [7:0]
-    /// Default: 0x0F
-    pub lsb: u8,
+    /// Initial CRC value
+    /// Default: 0x1D0F
+    pub value: u16,
 }
 
 impl Default for CrcInitialValue {
     fn default() -> Self {
-        Self {
-            msb: 0x1D,
-            lsb: 0x0F,
-        }
+        Self { value: 0x1D0F }
     }
 }
 
@@ -92,20 +80,14 @@ impl Default for CrcInitialValue {
 #[register(0x06BEu16)]
 #[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
 pub struct CrcPolynomial {
-    /// CRC polynomial [15:8]
-    /// Default: 0x10
-    pub msb: u8,
-    /// CRC polynomial [7:0]
-    /// Default: 0x21
-    pub lsb: u8,
+    /// CRC polynomial value
+    /// Default: 0x1021
+    pub value: u16,
 }
 
 impl Default for CrcPolynomial {
     fn default() -> Self {
-        Self {
-            msb: 0x10,
-            lsb: 0x21,
-        }
+        Self { value: 0x1021 }
     }
 }
 
@@ -194,20 +176,14 @@ pub struct IqPolaritySetup {
 #[register(0x0740u16)]
 #[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
 pub struct LoraSyncWord {
-    /// Sync word MSB
-    /// Default: 0x14
-    pub msb: u8,
-    /// Sync word LSB
-    /// Default: 0x24
-    pub lsb: u8,
+    /// Sync word value
+    /// Default: 0x1424
+    pub value: u16,
 }
 
 impl Default for LoraSyncWord {
     fn default() -> Self {
-        Self {
-            msb: 0x14,
-            lsb: 0x24,
-        }
+        Self { value: 0x1424 }
     }
 }
 
@@ -217,8 +193,7 @@ impl FromByteArray for WhiteningInitialValue {
 
     fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
         Ok(Self {
-            msb: bytes[0],
-            lsb: bytes[1],
+            value: u16::from_be_bytes(bytes),
         })
     }
 }
@@ -228,7 +203,7 @@ impl ToByteArray for WhiteningInitialValue {
     type Array = [u8; 2];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        Ok([self.msb, self.lsb])
+        Ok(self.value.to_be_bytes())
     }
 }
 
@@ -238,8 +213,7 @@ impl FromByteArray for CrcInitialValue {
 
     fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
         Ok(Self {
-            msb: bytes[0],
-            lsb: bytes[1],
+            value: u16::from_be_bytes(bytes),
         })
     }
 }
@@ -249,7 +223,7 @@ impl ToByteArray for CrcInitialValue {
     type Array = [u8; 2];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        Ok([self.msb, self.lsb])
+        Ok(self.value.to_be_bytes())
     }
 }
 
@@ -259,8 +233,7 @@ impl FromByteArray for CrcPolynomial {
 
     fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
         Ok(Self {
-            msb: bytes[0],
-            lsb: bytes[1],
+            value: u16::from_be_bytes(bytes),
         })
     }
 }
@@ -270,7 +243,7 @@ impl ToByteArray for CrcPolynomial {
     type Array = [u8; 2];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        Ok([self.msb, self.lsb])
+        Ok(self.value.to_be_bytes())
     }
 }
 
@@ -354,8 +327,7 @@ impl FromByteArray for LoraSyncWord {
 
     fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
         Ok(Self {
-            msb: bytes[0],
-            lsb: bytes[1],
+            value: u16::from_be_bytes(bytes),
         })
     }
 }
@@ -365,6 +337,6 @@ impl ToByteArray for LoraSyncWord {
     type Array = [u8; 2];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        Ok([self.msb, self.lsb])
+        Ok(self.value.to_be_bytes())
     }
 }

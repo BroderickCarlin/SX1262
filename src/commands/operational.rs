@@ -13,25 +13,25 @@
 //! Mode transitions have specific timing requirements detailed in
 //! the documentation for each command.
 
+use bitflags::bitflags;
 use core::convert::Infallible;
 
 use crate::{Command, NoParameters, ToByteArray};
 
-/// Sleep configuration options
-///
-/// Controls behavior during sleep mode, including configuration
-/// retention and wake-up sources.
-#[derive(Debug, Clone, Copy)]
-pub struct SleepConfig {
-    /// When true, configuration is retained in sleep mode (warm start)
-    /// - false = Cold start, all registers reset to defaults
-    /// - true = Warm start, configuration retained
-    pub warm_start: bool,
-
-    /// When true, device can wake up on RTC timeout
-    /// - false = Wake on NSS falling edge only
-    /// - true = Wake on RTC timeout or NSS falling edge
-    pub rtc_wakeup: bool,
+bitflags! {
+    /// Sleep configuration options
+    ///
+    /// Controls behavior during sleep mode, including configuration
+    /// retention and wake-up sources.
+    #[derive(Debug, Clone, Copy)]
+    pub struct SleepConfig: u8 {
+        /// When set, configuration is retained in sleep mode (warm start)
+        /// When clear, cold start - all registers reset to defaults
+        const WARM_START = 1 << 2;
+        /// When set, device can wake up on RTC timeout
+        /// When clear, wake on NSS falling edge only
+        const RTC_WAKEUP = 1;
+    }
 }
 
 impl ToByteArray for SleepConfig {
@@ -39,14 +39,7 @@ impl ToByteArray for SleepConfig {
     type Array = [u8; 1];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        let mut value = 0u8;
-        if self.warm_start {
-            value |= 1 << 2;
-        }
-        if self.rtc_wakeup {
-            value |= 1;
-        }
-        Ok([value])
+        Ok([self.bits()])
     }
 }
 
@@ -207,27 +200,42 @@ impl Command for SetTx {
     }
 }
 
+/// RX operation mode
+#[derive(Debug, Clone, Copy)]
+pub enum RxMode {
+    /// Return after receiving a single packet
+    Single,
+    /// Continuous reception until stopped by command
+    Continuous,
+    /// Return after timeout or packet reception
+    /// Timeout in steps of 15.625 μs (max 262s)
+    Timed(u32),
+}
+
+impl From<RxMode> for Timeout {
+    fn from(mode: RxMode) -> Self {
+        match mode {
+            RxMode::Single => Timeout(0x000000),
+            RxMode::Continuous => Timeout(0xFFFFFF),
+            RxMode::Timed(timeout) => Timeout(timeout),
+        }
+    }
+}
+
 /// SetRx command (0x82)
 ///
 /// Puts the radio into receive mode.
 ///
 /// # Important Notes
 /// - BUSY low when RX enabled and ready
-/// - Three operating modes:
-///   - Timeout = 0x000000: Single mode, return after packet
-///   - Timeout = 0xFFFFFF: Continuous mode
-///   - Other timeout: Return after timeout/packet
-/// - Timeout disabled once valid packet detected
 /// - Returns to configured fallback mode after:
 ///   - Packet received (RxDone IRQ)
-///   - Timeout period elapsed
+///   - Timeout period elapsed (Timed mode only)
+/// - Timeout disabled once valid packet detected
 #[derive(Debug, Clone)]
 pub struct SetRx {
-    /// Timeout in steps of 15.625 μs
-    /// - 0x000000 = Single mode
-    /// - 0xFFFFFF = Continuous mode
-    /// - Other = Timed mode (max 262s)
-    pub timeout: Timeout,
+    /// RX operation mode
+    pub mode: RxMode,
 }
 
 impl Command for SetRx {
@@ -240,19 +248,20 @@ impl Command for SetRx {
     }
 
     fn invoking_parameters(self) -> Self::CommandParameters {
-        self.timeout
+        self.mode.into()
     }
 }
 
-/// StopTimerOnPreamble configuration
-///
-/// Controls when RX timeout timer is stopped.
-#[derive(Debug, Clone, Copy)]
-pub struct StopTimerOnPreambleConfig {
-    /// Stop timer on preamble detection
-    /// - false = Stop on Sync/Header (default)
-    /// - true = Stop on preamble
-    pub stop_on_preamble: bool,
+bitflags! {
+    /// StopTimerOnPreamble configuration
+    ///
+    /// Controls when RX timeout timer is stopped.
+    #[derive(Debug, Clone, Copy)]
+    pub struct StopTimerOnPreambleConfig: u8 {
+        /// When set, stop timer on preamble detection
+        /// When clear, stop on Sync/Header (default)
+        const STOP_ON_PREAMBLE = 1;
+    }
 }
 
 impl ToByteArray for StopTimerOnPreambleConfig {
@@ -260,7 +269,7 @@ impl ToByteArray for StopTimerOnPreambleConfig {
     type Array = [u8; 1];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        Ok([self.stop_on_preamble as u8])
+        Ok([self.bits()])
     }
 }
 
@@ -482,25 +491,27 @@ impl Command for SetRegulatorMode {
     }
 }
 
-/// Calibration configuration
-///
-/// Selects which blocks to calibrate.
-#[derive(Debug, Clone, Copy)]
-pub struct CalibrationConfig {
-    /// RC64k oscillator calibration
-    pub rc64k: bool,
-    /// RC13M oscillator calibration
-    pub rc13m: bool,
-    /// PLL calibration
-    pub pll: bool,
-    /// ADC pulse calibration
-    pub adc_pulse: bool,
-    /// ADC bulk N calibration
-    pub adc_bulk_n: bool,
-    /// ADC bulk P calibration
-    pub adc_bulk_p: bool,
-    /// Image rejection calibration
-    pub image: bool,
+bitflags! {
+    /// Calibration configuration
+    ///
+    /// Selects which blocks to calibrate.
+    #[derive(Debug, Clone, Copy)]
+    pub struct CalibrationConfig: u8 {
+        /// RC64k oscillator calibration
+        const RC64K = 1 << 0;
+        /// RC13M oscillator calibration
+        const RC13M = 1 << 1;
+        /// PLL calibration
+        const PLL = 1 << 2;
+        /// ADC pulse calibration
+        const ADC_PULSE = 1 << 3;
+        /// ADC bulk N calibration
+        const ADC_BULK_N = 1 << 4;
+        /// ADC bulk P calibration
+        const ADC_BULK_P = 1 << 5;
+        /// Image rejection calibration
+        const IMAGE = 1 << 6;
+    }
 }
 
 impl ToByteArray for CalibrationConfig {
@@ -508,29 +519,7 @@ impl ToByteArray for CalibrationConfig {
     type Array = [u8; 1];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        let mut value = 0u8;
-        if self.rc64k {
-            value |= 1 << 0;
-        }
-        if self.rc13m {
-            value |= 1 << 1;
-        }
-        if self.pll {
-            value |= 1 << 2;
-        }
-        if self.adc_pulse {
-            value |= 1 << 3;
-        }
-        if self.adc_bulk_n {
-            value |= 1 << 4;
-        }
-        if self.adc_bulk_p {
-            value |= 1 << 5;
-        }
-        if self.image {
-            value |= 1 << 6;
-        }
-        Ok([value])
+        Ok([self.bits()])
     }
 }
 

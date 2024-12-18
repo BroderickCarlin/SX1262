@@ -226,25 +226,270 @@ impl Command for SetTxParams {
     }
 }
 
+/// GFSK modulation parameters
+///
+/// Configures the modulation settings for GFSK packet type.
+/// The radio calculates internal register values from these parameters:
+/// - Bit rate register = (32 * FXTAL) / bit_rate
+/// - Frequency deviation register = (deviation * 2^25) / FXTAL
+///   where FXTAL is typically 32MHz
+///
+/// # Important Notes
+/// - Ensure bandwidth > 2 * (frequency_deviation + bit_rate/2)
+/// - Pulse shaping affects spectral efficiency and occupied bandwidth
+/// - Higher bit rates require wider bandwidths
+#[derive(Debug, Clone, Copy)]
+pub struct GfskModParams {
+    /// Bit rate in bits per second
+    /// Valid range: 600 bps to 300 kbps
+    pub bit_rate: u32,
+    /// Pulse shape filtering for spectral efficiency
+    pub pulse_shape: GfskPulseShape,
+    /// RX bandwidth setting for channel filtering
+    pub bandwidth: GfskBandwidth,
+    /// Frequency deviation in Hz
+    /// Maximum deviation should be < 0.5 * bandwidth
+    pub freq_deviation: u32,
+}
+
+/// GFSK pulse shape options for spectral shaping
+///
+/// Gaussian filtering reduces spectral spreading but increases
+/// intersymbol interference. Higher BT products reduce ISI
+/// at the cost of wider bandwidth.
+#[derive(Debug, Clone, Copy)]
+pub enum GfskPulseShape {
+    /// No pulse shaping filter
+    NoFilter = 0x00,
+    /// Gaussian filter, BT = 0.3
+    /// Minimum bandwidth, maximum ISI
+    Bt03 = 0x08,
+    /// Gaussian filter, BT = 0.5
+    /// Balanced bandwidth/ISI tradeoff
+    Bt05 = 0x09,
+    /// Gaussian filter, BT = 0.7
+    /// Reduced ISI, wider bandwidth
+    Bt07 = 0x0A,
+    /// Gaussian filter, BT = 1.0
+    /// Minimum ISI, maximum bandwidth
+    Bt1 = 0x0B,
+}
+
+/// GFSK receiver bandwidth options
+///
+/// Sets the channel filter bandwidth. Should be selected based on:
+/// - Signal bandwidth (2 * (freq_deviation + bit_rate/2))
+/// - Adjacent channel rejection requirements
+/// - Expected frequency error
+///
+/// Wider bandwidths allow higher data rates but reduce selectivity
+#[derive(Debug, Clone, Copy)]
+pub enum GfskBandwidth {
+    /// 4.8 kHz Double-Side Bandwidth
+    Bw48 = 0x1F,
+    /// 5.8 kHz Double-Side Bandwidth
+    Bw58 = 0x17,
+    /// 7.3 kHz Double-Side Bandwidth
+    Bw73 = 0x0F,
+    /// 9.7 kHz Double-Side Bandwidth
+    Bw97 = 0x1E,
+    /// 11.7 kHz Double-Side Bandwidth
+    Bw117 = 0x16,
+    /// 14.6 kHz Double-Side Bandwidth
+    Bw146 = 0x0E,
+    /// 29.3 kHz Double-Side Bandwidth
+    Bw293 = 0x0D,
+    /// 39 kHz Double-Side Bandwidth
+    Bw39 = 0x1C,
+    /// 46.9 kHz Double-Side Bandwidth
+    Bw469 = 0x14,
+    /// 58.6 kHz Double-Side Bandwidth
+    Bw586 = 0x0C,
+    /// 78.2 kHz Double-Side Bandwidth
+    Bw782 = 0x1B,
+    /// 93.8 kHz Double-Side Bandwidth
+    Bw938 = 0x13,
+    /// 117.3 kHz Double-Side Bandwidth
+    Bw1173 = 0x0B,
+    /// 156.2 kHz Double-Side Bandwidth
+    Bw1562 = 0x1A,
+    /// 1872 kHz Double-Side Bandwidth
+    Bw1872 = 0x12,
+    /// 232.3 kHz Double-Side Bandwidth
+    Bw2323 = 0x0A,
+    /// 312.0 kHz Double-Side Bandwidth
+    Bw3120 = 0x19,
+    /// 373.6 kHz Double-Side Bandwidth
+    Bw3736 = 0x11,
+    /// 467.0 kHz Double-Side Bandwidth
+    Bw4670 = 0x09,
+}
+
+/// LoRa modulation parameters
+///
+/// Configures the modulation settings for LoRa packet type.
+/// Parameter selection affects:
+/// - Sensitivity vs time-on-air tradeoff
+/// - Maximum packet length
+/// - Required receive window length
+///
+/// # Important Notes
+/// - Higher spreading factors increase sensitivity but reduce data rate
+/// - Wider bandwidths increase data rate but reduce sensitivity
+/// - Enable low data rate optimization when symbol length ≥ 16.38ms
+/// - Coding rate adds redundancy at the cost of time-on-air
+#[derive(Debug, Clone, Copy)]
+pub struct LoRaModParams {
+    /// Spreading Factor (chip/symbol)
+    pub spreading_factor: SpreadingFactor,
+    /// Signal bandwidth
+    pub bandwidth: LoRaBandwidth,
+    /// Coding rate for forward error correction
+    pub coding_rate: CodingRate,
+    /// Low Data Rate optimization
+    /// Required when symbol length ≥ 16.38ms
+    pub low_data_rate_opt: bool,
+}
+
+/// LoRa spreading factor options
+///
+/// Sets the number of chips per symbol. Higher spreading factors:
+/// - Increase sensitivity
+/// - Increase time-on-air
+/// - Reduce maximum packet length
+/// - Reduce tolerance to frequency offset
+///
+/// SF5/SF6 have restrictions on header and CRC usage
+#[derive(Debug, Clone, Copy)]
+pub enum SpreadingFactor {
+    /// SF5 - 32 chips/symbol
+    /// Fastest data rate, shortest range
+    SF5 = 5,
+    /// SF6 - 64 chips/symbol
+    SF6 = 6,
+    /// SF7 - 128 chips/symbol
+    SF7 = 7,
+    /// SF8 - 256 chips/symbol
+    SF8 = 8,
+    /// SF9 - 512 chips/symbol
+    SF9 = 9,
+    /// SF10 - 1024 chips/symbol
+    SF10 = 10,
+    /// SF11 - 2048 chips/symbol
+    SF11 = 11,
+    /// SF12 - 4096 chips/symbol
+    /// Slowest data rate, longest range
+    SF12 = 12,
+}
+
+/// LoRa bandwidth options
+///
+/// Sets the signal bandwidth. Wider bandwidths:
+/// - Increase data rate
+/// - Reduce sensitivity
+/// - Increase tolerance to frequency offset
+///
+/// Some bandwidths may not be available below 400MHz
+#[derive(Debug, Clone, Copy)]
+pub enum LoRaBandwidth {
+    /// 4.8 kHz bandwidth
+    /// Lowest data rate, highest sensitivity
+    Bw4 = 0x1F,
+    /// 5.8 kHz bandwidth
+    Bw5 = 0x17,
+    /// 7.3 kHz bandwidth
+    Bw7 = 0x0F,
+    /// 9.7 kHz bandwidth
+    Bw9 = 0x1E,
+    /// 11.7 kHz bandwidth
+    Bw11 = 0x16,
+    /// 14.6 kHz bandwidth
+    Bw14 = 0x0E,
+    /// 19.5 kHz bandwidth
+    Bw19 = 0x1D,
+    /// 23.4 kHz bandwidth
+    Bw23 = 0x15,
+    /// 29.3 kHz bandwidth
+    Bw29 = 0x0D,
+    /// 39 kHz bandwidth
+    Bw39 = 0x1C,
+    /// 46.9 kHz bandwidth
+    Bw46 = 0x14,
+    /// 58.6 kHz bandwidth
+    Bw58 = 0x0C,
+    /// 78.2 kHz bandwidth
+    Bw78 = 0x1B,
+    /// 93.8 kHz bandwidth
+    Bw93 = 0x13,
+    /// 117.3 kHz bandwidth
+    Bw117 = 0x0B,
+    /// 156.2 kHz bandwidth
+    Bw156 = 0x1A,
+    /// 187.2 kHz bandwidth
+    Bw187 = 0x12,
+    /// 234.3 kHz bandwidth
+    Bw234 = 0x0A,
+    /// 312 kHz bandwidth
+    Bw312 = 0x19,
+    /// 373.2 kHz bandwidth
+    Bw373 = 0x11,
+    /// 467 kHz bandwidth
+    /// Highest data rate, lowest sensitivity
+    Bw467 = 0x09,
+}
+
+/// LoRa coding rate options
+///
+/// Sets the Forward Error Correction (FEC) rate.
+/// Higher coding rates:
+/// - Increase reliability in noisy conditions
+/// - Increase time-on-air
+/// - Reduce effective data rate
+#[derive(Debug, Clone, Copy)]
+pub enum CodingRate {
+    /// 4/5 coding rate
+    /// Lowest redundancy (1.25x overhead)
+    Cr45 = 0x01,
+    /// 4/6 coding rate
+    /// 1.5x overhead
+    Cr46 = 0x02,
+    /// 4/7 coding rate
+    /// 1.75x overhead
+    Cr47 = 0x03,
+    /// 4/8 coding rate
+    /// Highest redundancy (2x overhead)
+    Cr48 = 0x04,
+}
+
 /// Modulation parameters configuration
 ///
-/// Parameters interpretation depends on the packet type:
+/// Configures the radio modulation based on the selected packet type.
+/// The parameters are interpreted differently for GFSK and LoRa modes:
 ///
-/// # GFSK Mode
-/// - params[0-2]: Bit rate (32 * Fxtal / bit_rate)
-/// - params[3]: Pulse shape (0=No filter, 8-11=Gaussian BT 0.3-1.0)
-/// - params[4]: Bandwidth (RX filter, see datasheet Table 13-45)
-/// - params[5-7]: Frequency deviation
+/// # GFSK Mode Parameters
+/// Uses GfskModParams to configure:
+/// - Bit rate (600 bps to 300 kbps)
+/// - Pulse shaping filter
+/// - RX bandwidth (4.8 to 467 kHz)
+/// - Frequency deviation
 ///
-/// # LoRa Mode
-/// - params[0]: Spreading factor (5-12)
-/// - params[1]: Bandwidth (0x00=7.8kHz to 0x06=500kHz)
-/// - params[2]: Coding rate (0x01=4/5 to 0x04=4/8)
-/// - params[3]: Low data rate optimization (0=Off, 1=On)
+/// # LoRa Mode Parameters
+/// Uses LoRaModParams to configure:
+/// - Spreading factor (SF5-SF12)
+/// - Bandwidth (7.8 to 500 kHz)
+/// - Coding rate (4/5 to 4/8)
+/// - Low data rate optimization
+///
+/// # Important Notes
+/// - Parameters must match the selected packet type
+/// - Configuration affects sensitivity, range, and data rate
+/// - Some parameter combinations may be invalid or suboptimal
 #[derive(Debug, Clone)]
-pub struct ModulationParams {
-    /// Raw modulation parameters array
-    pub params: [u8; 8],
+pub enum ModulationParams {
+    /// GFSK modulation configuration
+    Gfsk(GfskModParams),
+    /// LoRa modulation configuration
+    LoRa(LoRaModParams),
 }
 
 impl ToByteArray for ModulationParams {
@@ -252,7 +497,26 @@ impl ToByteArray for ModulationParams {
     type Array = [u8; 8];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        Ok(self.params)
+        let mut bytes = [0u8; 8];
+        match self {
+            ModulationParams::Gfsk(params) => {
+                // Bit rate = (32 * FXTAL) / bit_rate
+                let br_val = (32 * 32_000_000) / params.bit_rate;
+                bytes[0..3].copy_from_slice(&br_val.to_be_bytes()[1..]);
+                bytes[3] = params.pulse_shape as u8;
+                bytes[4] = params.bandwidth as u8;
+                // Frequency deviation = (deviation * 2^25) / FXTAL
+                let fdev = (params.freq_deviation * 33_554_432) / 32_000_000;
+                bytes[5..8].copy_from_slice(&fdev.to_be_bytes()[1..]);
+            }
+            ModulationParams::LoRa(params) => {
+                bytes[0] = params.spreading_factor as u8;
+                bytes[1] = params.bandwidth as u8;
+                bytes[2] = params.coding_rate as u8;
+                bytes[3] = params.low_data_rate_opt as u8;
+            }
+        }
+        Ok(bytes)
     }
 }
 
