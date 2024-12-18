@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/BroderickCarlin/SX1262/compare/v0.1.2...v0.2.0) - 2024-12-18
+
+### Added
+
+- Add a Device type to simplify interfacing with a device
+
+### Fixed
+
+- Fix some issues in the command/register types
+
 ## [0.1.2](https://github.com/BroderickCarlin/SX1262/compare/v0.1.1...v0.1.2) - 2024-12-13
 
 ### Fixed
