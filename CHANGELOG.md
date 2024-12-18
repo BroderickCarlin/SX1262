@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1](https://github.com/BroderickCarlin/SX1262/compare/v0.2.0...v0.2.1) - 2024-12-18
+
+### Added
+
+- Add async variations of various methods, and documentation
+
 ## [0.2.0](https://github.com/BroderickCarlin/SX1262/compare/v0.1.2...v0.2.0) - 2024-12-18
 
 ### Added
