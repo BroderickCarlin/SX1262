@@ -13,7 +13,7 @@ categories = ["embedded", "hardware-support", "no-std"]
 [dependencies]
 defmt = { version = "0.3", optional = true }
 embedded-hal = "1.0.0-alpha.11"
-regiface = "0.2.2"
+regiface = "0.2.4"
 bitflags = "2.6" 
 
 [features]

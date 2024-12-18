@@ -20,6 +20,10 @@
 //! # Architecture
 //! The driver is organized into several modules:
 //!
+//! - [`device`]: Main device interface for hardware interaction
+//!   - Provides high-level API for register access and command execution
+//!   - Manages SPI communication with the radio
+//!
 //! - [`registers`]: Register definitions for direct hardware access
 //!   - [`registers::rf`]: RF-related registers (frequency, power, etc)
 //!   - [`registers::packet`]: Packet handling registers
@@ -34,15 +38,19 @@
 //!
 //! # Usage
 //! The driver uses the `regiface` crate to provide a type-safe interface
-//! for register access and command execution. Configuration follows a
-//! specific sequence:
+//! for register access and command execution. The main entry point is the
+//! [`Device`] struct which wraps an SPI interface and provides methods for
+//! interacting with the radio.
 //!
-//! 1. Set operating mode (STDBY_RC for configuration)
-//! 2. Configure packet type (LoRa/FSK)
-//! 3. Set RF frequency and modulation parameters
-//! 4. Configure packet format and processing
-//! 5. Set up DIO pins and interrupts
-//! 6. Enter RX/TX mode for operation
+//! Configuration follows a specific sequence:
+//!
+//! 1. Create a new [`Device`] instance with your SPI interface
+//! 2. Set operating mode (STDBY_RC for configuration)
+//! 3. Configure packet type (LoRa/FSK)
+//! 4. Set RF frequency and modulation parameters
+//! 5. Configure packet format and processing
+//! 6. Set up DIO pins and interrupts
+//! 7. Enter RX/TX mode for operation
 //!
 //! # Important Notes
 //! - Most configuration must be done in STDBY_RC mode
@@ -53,13 +61,26 @@
 //!
 //! # Example
 //! ```no_run
-//! // Example code would go here showing basic setup and usage
+//! use embedded_hal::spi::SpiDevice;
+//! use sx1262::{Device, commands::{SetStandby, StandbyConfig}, Error};
+//!
+//! fn configure_radio<SPI: SpiDevice>(spi: SPI) -> Result<Device<SPI>, Error> {
+//!     let mut device = Device::new(spi);
+//!     
+//!     // Set to STDBY_RC mode for configuration
+//!     device.execute_command( SetStandby { config: StandbyConfig::Rc})?;
+//!     
+//!     Ok(device)
+//! }
 //! ```
 
+pub use regiface::errors::Error;
 use regiface::*;
 
 pub mod commands;
+pub mod device;
 pub mod registers;
 
 pub use commands::*;
+pub use device::Device;
 pub use registers::*;

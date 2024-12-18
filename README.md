@@ -28,36 +28,33 @@ sx1262 = "0.1.0"
 
 ## Usage
 
-The driver is organized into modules for registers and commands:
+The main entry point is the `Device` type which wraps an SPI interface and provides methods for register access and command execution:
 
 ```rust
-use sx1262::{commands, registers};
-
-// Configure radio in STDBY_RC mode
-// Set packet type (LoRa/FSK)
-// Configure RF frequency and modulation
-// Set up packet format
-// Configure DIO pins
-// Enter RX/TX mode
-```
-
-### Example Configuration
-
-```rust
-use sx1262::commands::*;
+use sx1262::{Device, commands::operational::SetStandby};
 use embedded_hal::spi::SpiDevice;
 
-fn configure_radio<SPI>(spi: &mut SPI) -> Result<(), SPI::Error> 
-where 
-    SPI: SpiDevice,
-{
-    // Basic setup would go here
-    // This is a placeholder for actual implementation
-    Ok(())
+fn configure_radio<SPI: SpiDevice>(spi: SPI) -> Result<Device<SPI>, SPI::Error> {
+    // Create new device instance
+    let mut device = Device::new(spi);
+    
+    // Read/write registers
+    let reg_value = device.read_register(/* register */)?;
+    device.write_register(/* register */)?;
+    
+    // Execute commands
+    device.execute_command(/* command */)?;
+    
+    Ok(device)
 }
 ```
 
-## Architecture
+The driver is organized into modules for registers and commands:
+
+- **device**: Main interface for hardware interaction
+  - Wraps SPI communication
+  - Provides register access methods
+  - Handles command execution
 
 - **registers**: Hardware register definitions
   - rf: Frequency, power, etc.
