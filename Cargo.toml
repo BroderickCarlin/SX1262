@@ -11,7 +11,7 @@ keywords = ["embedded", "radio", "lora", "semtech", "no-std"]
 categories = ["embedded", "hardware-support", "no-std"]
 
 [dependencies]
-defmt = { version = "0.3", optional = true }
+defmt = { version = "1.0", optional = true }
 embedded-hal = "1.0.0-alpha.11"
 embedded-hal-async = "1.0.0-alpha.11"
 regiface = "0.2.4"
