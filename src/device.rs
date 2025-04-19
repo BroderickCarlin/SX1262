@@ -74,7 +74,7 @@ where
         R: ReadableRegister<IdType = u16>,
     {
         let header = &mut [0x1D, 0x00, 0x00, 0x00];
-        header[1..].copy_from_slice(&R::id().to_be_bytes());
+        header[1..3].copy_from_slice(&R::id().to_be_bytes());
 
         let mut raw_value = R::Array::new();
 
@@ -200,7 +200,7 @@ where
         R: ReadableRegister<IdType = u16>,
     {
         let header = &mut [0x1D, 0x00, 0x00, 0x00];
-        header[1..].copy_from_slice(&R::id().to_be_bytes());
+        header[1..3].copy_from_slice(&R::id().to_be_bytes());
 
         let mut raw_value = R::Array::new();
 
