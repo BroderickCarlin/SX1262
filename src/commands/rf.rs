@@ -35,7 +35,10 @@ impl ToByteArray for RfFrequencyConfig {
     type Array = [u8; 4];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        Ok(self.frequency.to_be_bytes())
+        // Frequency register = (Frequency * 2^25) / FXTAL
+        let f = ((self.frequency as u64 * (1_u64 << 25)) / 32_000_000) as u32;
+
+        Ok(f.to_be_bytes())
     }
 }
 
@@ -505,8 +508,8 @@ impl ToByteArray for ModulationParams {
                 bytes[0..3].copy_from_slice(&br_val.to_be_bytes()[1..]);
                 bytes[3] = params.pulse_shape as u8;
                 bytes[4] = params.bandwidth as u8;
-                // Frequency deviation = (deviation * 2^25) / FXTAL
-                let fdev = (params.freq_deviation * 33_554_432) / 32_000_000;
+                // Frequency deviation register = (Frequency deviation * 2^25) / FXTAL
+                let fdev = ((params.freq_deviation as u64 * (1_u64 << 25)) / 32_000_000) as u32;
                 bytes[5..8].copy_from_slice(&fdev.to_be_bytes()[1..]);
             }
             ModulationParams::LoRa(params) => {
