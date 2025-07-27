@@ -161,10 +161,12 @@ pub struct Timeout(pub u32);
 
 impl ToByteArray for Timeout {
     type Error = Infallible;
-    type Array = [u8; 4];
+    type Array = [u8; 3];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        Ok(self.0.to_be_bytes())
+        let mut bytes = [0u8; 3];
+        bytes.copy_from_slice(&self.0.to_be_bytes()[1..4]);
+        Ok(bytes)
     }
 }
 
