@@ -39,11 +39,11 @@ fn configure_radio<SPI: SpiDevice>(spi: SPI) -> Result<Device<SPI>, SPI::Error> 
     let mut device = Device::new(spi);
     
     // Read/write registers
-    let reg_value = device.read_register(/* register */)?;
+    let reg_value: /* register type */ = device.read_register()?;
     device.write_register(/* register */)?;
     
     // Execute commands
-    device.execute_command(/* command */)?;
+    let cmd_resp = device.execute_command(/* command */)?;
     
     Ok(device)
 }

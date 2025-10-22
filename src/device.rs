@@ -1,25 +1,25 @@
 //! SX126x Radio Device Interface
-//! 
+//!
 //! This module provides a high-level interface for interacting with SX126x series radio devices
 //! through SPI communication. It supports both synchronous and asynchronous operations.
-//! 
+//!
 //! The interface is built around the `Device<SPI>` struct which wraps an SPI interface and
 //! provides methods for:
 //! - Reading and writing device registers
 //! - Reading and writing to the device's buffer
 //! - Executing radio commands
-//! 
+//!
 //! # Example
-//! ```no_run
-//! use sx126x::Device;
-//! 
+//! ```ignore
+//! use sx1262::Device;
+//!
 //! // Create device with SPI interface
 //! let spi = // ... SPI implementation
 //! let mut device = Device::new(spi);
-//! 
+//!
 //! // Read a register
 //! let value: SomeRegister = device.read_register()?;
-//! 
+//!
 //! // Write to buffer
 //! device.write_buffer(0, &[0x01, 0x02, 0x03])?;
 //! ```
@@ -32,7 +32,7 @@ use regiface::{
 };
 
 /// Main device interface for the SX126x radio.
-/// 
+///
 /// This struct wraps an SPI interface and provides methods to interact with the radio.
 /// It supports both synchronous operations through the embedded-hal traits and
 /// asynchronous operations through embedded-hal-async.
@@ -42,7 +42,7 @@ pub struct Device<SPI> {
 
 impl<SPI> Device<SPI> {
     /// Creates a new Device instance wrapping the provided SPI interface.
-    /// 
+    ///
     /// # Arguments
     /// * `spi` - An SPI interface implementing the required embedded-hal traits
     pub fn new(spi: SPI) -> Self {
@@ -50,7 +50,7 @@ impl<SPI> Device<SPI> {
     }
 
     /// Releases the underlying SPI device.
-    /// 
+    ///
     /// This method consumes the Device instance and returns the wrapped SPI interface.
     pub fn release(self) -> SPI {
         self.spi
@@ -62,10 +62,10 @@ where
     SPI: embedded_hal::spi::SpiDevice,
 {
     /// Reads a register value from the device.
-    /// 
+    ///
     /// # Type Parameters
     /// * `R` - Register type implementing ReadableRegister with u16 ID
-    /// 
+    ///
     /// # Errors
     /// * `RegifaceError::BusError` - SPI communication failed
     /// * `RegifaceError::DeserializationError` - Failed to parse register value
@@ -89,13 +89,13 @@ where
     }
 
     /// Writes a value to a device register.
-    /// 
+    ///
     /// # Type Parameters
     /// * `R` - Register type implementing WritableRegister with u16 ID
-    /// 
+    ///
     /// # Arguments
     /// * `register` - The register value to write
-    /// 
+    ///
     /// # Errors
     /// * `RegifaceError::BusError` - SPI communication failed
     pub fn write_register<R>(&mut self, register: R) -> Result<(), RegifaceError>
@@ -116,11 +116,11 @@ where
     }
 
     /// Writes bytes to the device's buffer at a specified offset.
-    /// 
+    ///
     /// # Arguments
     /// * `offset` - Starting position in the buffer
     /// * `bytes` - Data to write
-    /// 
+    ///
     /// # Errors
     /// * `RegifaceError::BusError` - SPI communication failed
     pub fn write_buffer(&mut self, offset: u8, bytes: &[u8]) -> Result<(), RegifaceError> {
@@ -135,11 +135,11 @@ where
     }
 
     /// Reads bytes from the device's buffer starting at a specified offset.
-    /// 
+    ///
     /// # Arguments
     /// * `offset` - Starting position in the buffer to read from
     /// * `bytes` - Buffer to store read data
-    /// 
+    ///
     /// # Errors
     /// * `RegifaceError::BusError` - SPI communication failed
     pub fn read_buffer(&mut self, offset: u8, bytes: &mut [u8]) -> Result<(), RegifaceError> {
@@ -154,16 +154,16 @@ where
     }
 
     /// Executes a command on the device.
-    /// 
+    ///
     /// # Type Parameters
     /// * `C` - Command type implementing the Command trait with u8 ID
-    /// 
+    ///
     /// # Arguments
     /// * `command` - The command to execute
-    /// 
+    ///
     /// # Returns
     /// Command response parameters on success
-    /// 
+    ///
     /// # Errors
     /// * `RegifaceError::BusError` - SPI communication failed
     /// * `RegifaceError::DeserializationError` - Failed to parse command response
@@ -216,7 +216,7 @@ where
     }
 
     /// Asynchronously writes a value to a device register.
-    /// 
+    ///
     /// This is the async version of [`write_register`](Device::write_register).
     pub async fn write_register_async<R>(&mut self, register: R) -> Result<(), RegifaceError>
     where
@@ -237,7 +237,7 @@ where
     }
 
     /// Asynchronously writes bytes to the device's buffer at a specified offset.
-    /// 
+    ///
     /// This is the async version of [`write_buffer`](Device::write_buffer).
     pub async fn write_buffer_async(
         &mut self,
@@ -256,7 +256,7 @@ where
     }
 
     /// Asynchronously reads bytes from the device's buffer starting at a specified offset.
-    /// 
+    ///
     /// This is the async version of [`read_buffer`](Device::read_buffer).
     pub async fn read_buffer_async(
         &mut self,
@@ -275,7 +275,7 @@ where
     }
 
     /// Asynchronously executes a command on the device.
-    /// 
+    ///
     /// This is the async version of [`execute_command`](Device::execute_command).
     pub async fn execute_command_async<C>(
         &mut self,
