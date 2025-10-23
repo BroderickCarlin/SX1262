@@ -12,6 +12,8 @@
 
 use core::convert::Infallible;
 
+use regiface::Zeros;
+
 use crate::{Command, FromByteArray, NoParameters, ToByteArray};
 
 bitflags::bitflags! {
@@ -139,7 +141,7 @@ pub struct GetIrqStatus;
 
 impl Command for GetIrqStatus {
     type IdType = u8;
-    type CommandParameters = NopParameters<1>;
+    type CommandParameters = Zeros<1>;
     type ResponseParameters = IrqMask;
 
     fn id() -> Self::IdType {
@@ -304,30 +306,5 @@ impl Command for SetDio3AsTcxoCtrl {
 
     fn invoking_parameters(self) -> Self::CommandParameters {
         self.config
-    }
-}
-
-/// NopParameters for use with read commands that send few zeros
-/// before the data are ready. One example of such command is
-/// GetIrqStatus.
-#[derive(Debug, Copy, Clone, Default)]
-pub struct NopParameters<const N: usize>;
-
-impl<const N: usize> ToByteArray for NopParameters<N> {
-    type Error = Infallible;
-
-    type Array = [u8; N];
-
-    fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        Ok([0; N])
-    }
-}
-impl<const N: usize> FromByteArray for NopParameters<N> {
-    type Error = Infallible;
-
-    type Array = [u8; N];
-
-    fn from_bytes(_bytes: Self::Array) -> Result<Self, Self::Error> {
-        Ok(Self)
     }
 }
