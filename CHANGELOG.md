@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2](https://github.com/BroderickCarlin/SX1262/compare/v0.2.1...v0.2.2) - 2025-10-22
+
+### Fixed
+
+- RX and TX timeout should be 24 bits, not 32 bits
+
+### Other
+
+- Fix CI failure
+- Merge pull request #9 from BroderickCarlin/dependabot/github_actions/taskmedia/action-conventional-commits-1.1.20
+- Merge pull request #10 from BroderickCarlin/dependabot/cargo/defmt-1.0
+- Merge pull request #12 from MarSik/main
+
 ## [0.2.1](https://github.com/BroderickCarlin/SX1262/compare/v0.2.0...v0.2.1) - 2024-12-18
 
 ### Added
