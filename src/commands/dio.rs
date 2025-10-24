@@ -12,8 +12,7 @@
 
 use core::convert::Infallible;
 
-use regiface::Zeros;
-
+use crate::commands::status::Status;
 use crate::{Command, FromByteArray, NoParameters, ToByteArray};
 
 bitflags::bitflags! {
@@ -126,6 +125,29 @@ impl Command for SetDioIrqParams {
     }
 }
 
+/// GetIrqStatus response
+///
+/// Contains the device status and current interrupt flags.
+#[derive(Debug, Clone, Copy)]
+pub struct GetIrqStatusResponse {
+    /// Device status from the first response byte
+    pub status: Status,
+    /// Current interrupt flags
+    pub irq_mask: IrqMask,
+}
+
+impl FromByteArray for GetIrqStatusResponse {
+    type Error = Infallible;
+    type Array = [u8; 3]; // 1 status byte + 2 IRQ bytes
+
+    fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
+        Ok(Self {
+            status: Status::from_bytes([bytes[0]]).unwrap(),
+            irq_mask: IrqMask::from_bytes([bytes[1], bytes[2]]).unwrap(),
+        })
+    }
+}
+
 /// GetIrqStatus command (0x12)
 ///
 /// Returns the current state of all interrupt flags.
@@ -141,8 +163,8 @@ pub struct GetIrqStatus;
 
 impl Command for GetIrqStatus {
     type IdType = u8;
-    type CommandParameters = Zeros<1>;
-    type ResponseParameters = IrqMask;
+    type CommandParameters = NoParameters;
+    type ResponseParameters = GetIrqStatusResponse;
 
     fn id() -> Self::IdType {
         0x12

@@ -164,6 +164,30 @@ impl Command for GetStatus {
     }
 }
 
+/// GetRssiInst response
+///
+/// Contains the device status and instantaneous RSSI value.
+#[derive(Debug, Clone, Copy)]
+pub struct GetRssiInstResponse {
+    /// Device status from the first response byte
+    pub status: Status,
+    /// Instantaneous RSSI value
+    /// Signal power in dBm = -value/2
+    pub rssi: u8,
+}
+
+impl FromByteArray for GetRssiInstResponse {
+    type Error = Infallible;
+    type Array = [u8; 2]; // 1 status byte + 1 RSSI byte
+
+    fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
+        Ok(Self {
+            status: Status::from_bytes([bytes[0]]).unwrap(),
+            rssi: bytes[1],
+        })
+    }
+}
+
 /// GetRssiInst command (0x15)
 ///
 /// Returns instantaneous RSSI value during reception.
@@ -181,7 +205,7 @@ pub struct GetRssiInst;
 impl Command for GetRssiInst {
     type IdType = u8;
     type CommandParameters = NoParameters;
-    type ResponseParameters = u8;
+    type ResponseParameters = GetRssiInstResponse;
 
     fn id() -> Self::IdType {
         0x15
@@ -217,6 +241,29 @@ impl FromByteArray for RxBufferStatus {
     }
 }
 
+/// GetRxBufferStatus response
+///
+/// Contains the device status and RX buffer information.
+#[derive(Debug, Clone, Copy)]
+pub struct GetRxBufferStatusResponse {
+    /// Device status from the first response byte
+    pub status: Status,
+    /// RX buffer information
+    pub buffer_status: RxBufferStatus,
+}
+
+impl FromByteArray for GetRxBufferStatusResponse {
+    type Error = Infallible;
+    type Array = [u8; 3]; // 1 status byte + 2 buffer bytes
+
+    fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
+        Ok(Self {
+            status: Status::from_bytes([bytes[0]]).unwrap(),
+            buffer_status: RxBufferStatus::from_bytes([bytes[1], bytes[2]]).unwrap(),
+        })
+    }
+}
+
 /// GetRxBufferStatus command (0x13)
 ///
 /// Returns status of received packet in buffer.
@@ -232,7 +279,7 @@ pub struct GetRxBufferStatus;
 impl Command for GetRxBufferStatus {
     type IdType = u8;
     type CommandParameters = NoParameters;
-    type ResponseParameters = RxBufferStatus;
+    type ResponseParameters = GetRxBufferStatusResponse;
 
     fn id() -> Self::IdType {
         0x13
@@ -279,6 +326,29 @@ impl FromByteArray for PacketStatus {
     }
 }
 
+/// GetPacketStatus response
+///
+/// Contains the device status and packet status information.
+#[derive(Debug, Clone, Copy)]
+pub struct GetPacketStatusResponse {
+    /// Device status from the first response byte
+    pub status: Status,
+    /// Packet status information
+    pub packet_status: PacketStatus,
+}
+
+impl FromByteArray for GetPacketStatusResponse {
+    type Error = Infallible;
+    type Array = [u8; 4]; // 1 status byte + 3 packet status bytes
+
+    fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
+        Ok(Self {
+            status: Status::from_bytes([bytes[0]]).unwrap(),
+            packet_status: PacketStatus::from_bytes([bytes[1], bytes[2], bytes[3]]).unwrap(),
+        })
+    }
+}
+
 /// GetPacketStatus command (0x14)
 ///
 /// Returns detailed status of received packet.
@@ -295,7 +365,7 @@ pub struct GetPacketStatus;
 impl Command for GetPacketStatus {
     type IdType = u8;
     type CommandParameters = NoParameters;
-    type ResponseParameters = PacketStatus;
+    type ResponseParameters = GetPacketStatusResponse;
 
     fn id() -> Self::IdType {
         0x14
@@ -348,6 +418,29 @@ impl FromByteArray for DeviceErrors {
     }
 }
 
+/// GetDeviceErrors response
+///
+/// Contains the device status and error flags.
+#[derive(Debug, Clone, Copy)]
+pub struct GetDeviceErrorsResponse {
+    /// Device status from the first response byte
+    pub status: Status,
+    /// Device error flags
+    pub errors: DeviceErrors,
+}
+
+impl FromByteArray for GetDeviceErrorsResponse {
+    type Error = Infallible;
+    type Array = [u8; 3]; // 1 status byte + 2 error bytes
+
+    fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
+        Ok(Self {
+            status: Status::from_bytes([bytes[0]]).unwrap(),
+            errors: DeviceErrors::from_bytes([bytes[1], bytes[2]]).unwrap(),
+        })
+    }
+}
+
 /// GetDeviceErrors command (0x17)
 ///
 /// Returns error flags for various conditions.
@@ -363,7 +456,7 @@ pub struct GetDeviceErrors;
 impl Command for GetDeviceErrors {
     type IdType = u8;
     type CommandParameters = NoParameters;
-    type ResponseParameters = DeviceErrors;
+    type ResponseParameters = GetDeviceErrorsResponse;
 
     fn id() -> Self::IdType {
         0x17
@@ -431,6 +524,30 @@ impl FromByteArray for Stats {
     }
 }
 
+/// GetStats response
+///
+/// Contains the device status and packet statistics.
+#[derive(Debug, Clone, Copy)]
+pub struct GetStatsResponse {
+    /// Device status from the first response byte
+    pub status: Status,
+    /// Packet reception statistics
+    pub stats: Stats,
+}
+
+impl FromByteArray for GetStatsResponse {
+    type Error = Infallible;
+    type Array = [u8; 7]; // 1 status byte + 6 stats bytes
+
+    fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
+        Ok(Self {
+            status: Status::from_bytes([bytes[0]]).unwrap(),
+            stats: Stats::from_bytes([bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6]])
+                .unwrap(),
+        })
+    }
+}
+
 /// GetStats command (0x10)
 ///
 /// Returns packet reception statistics.
@@ -446,7 +563,7 @@ pub struct GetStats;
 impl Command for GetStats {
     type IdType = u8;
     type CommandParameters = NoParameters;
-    type ResponseParameters = Stats;
+    type ResponseParameters = GetStatsResponse;
 
     fn id() -> Self::IdType {
         0x10
