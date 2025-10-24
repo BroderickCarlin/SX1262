@@ -17,15 +17,6 @@ A type-safe embedded-hal driver for the Semtech SX1261/2 sub-GHz radio transceiv
 - **`no_std` Compatible**: Suitable for embedded systems
 - **Type-safe Interface**: Built on `regiface` for reliable register access
 
-## Installation
-
-Add this to your `Cargo.toml`:
-
-```toml
-[dependencies]
-sx1262 = "0.1.0"
-```
-
 ## Usage
 
 The main entry point is the `Device` type which wraps an SPI interface and provides methods for register access and command execution:
