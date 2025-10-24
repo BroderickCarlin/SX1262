@@ -1,7 +1,7 @@
 [package]
 name = "sx1262"
 description = "A embedded-hal driver for the Semtech SX1261/2 sub-GHz radio transceiver"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 authors = ["Broderick Carlin <broderick.carlin@gmail.com>"]
 readme = "README.md"
