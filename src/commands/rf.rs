@@ -555,28 +555,13 @@ impl Command for SetModulationParams {
 
 /// Packet parameters configuration
 ///
-/// Parameters interpretation depends on the packet type:
+/// Parameters interpretation depends on the packet type.
 ///
-/// # GFSK Mode
-/// - params[0-1]: Preamble length in bits
-/// - params[2]: Preamble detector length (0=Off, 4-7=8-32 bits)
-/// - params[3]: Sync word length in bits
-/// - params[4]: Address filtering (0=Off, 1=Node, 2=Node+Broadcast)
-/// - params[5]: Packet type (0=Fixed, 1=Variable)
-/// - params[6]: Payload length
-/// - params[7]: CRC type
-/// - params[8]: Whitening enable
-///
-/// # LoRa Mode
-/// - params[0-1]: Preamble length in symbols
-/// - params[2]: Header type (0=Variable/Explicit, 1=Fixed/Implicit)
-/// - params[3]: Payload length
-/// - params[4]: CRC enable
-/// - params[5]: IQ inversion enable
+/// see [`GFSKPacketParams`] and [`LoRaPacketParams`]
 #[derive(Debug, Clone)]
-pub struct PacketParams {
-    /// Raw packet parameters array
-    pub params: [u8; 9],
+pub enum PacketParams {
+    GFSK(GFSKPacketParams),
+    LoRa(LoRaPacketParams),
 }
 
 impl ToByteArray for PacketParams {
@@ -584,7 +569,84 @@ impl ToByteArray for PacketParams {
     type Array = [u8; 9];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        Ok(self.params)
+        match self {
+            PacketParams::GFSK(params) => params.to_bytes(),
+            PacketParams::LoRa(params) => params.to_bytes(),
+        }
+    }
+}
+
+/// GFSK Mode Packet Parameters
+#[derive(Debug, Clone)]
+pub struct GFSKPacketParams {
+    /// Preamble length in bits
+    preamble_length: [u8; 2],
+    /// Preamble detector length (0=Off, 4-7=8-32 bits)
+    preamble_detector_length: u8,
+    /// Sync word length in bits
+    sync_word_length: u8,
+    /// Address filtering (0=Off, 1=Node, 2=Node+Broadcast)
+    address_filtering: u8,
+    /// Packet type (0=Fixed, 1=Variable)
+    packet_type: u8,
+    /// Payload length
+    payload_length: u8,
+    /// CRC type
+    crc_type: u8,
+    /// Whitening enable
+    whitening_enable: u8,
+}
+
+impl ToByteArray for GFSKPacketParams {
+    type Error = Infallible;
+    type Array = [u8; 9];
+
+    fn to_bytes(self) -> Result<Self::Array, Self::Error> {
+        Ok([
+            self.preamble_length[0],
+            self.preamble_length[1],
+            self.preamble_detector_length,
+            self.sync_word_length,
+            self.address_filtering,
+            self.packet_type,
+            self.payload_length,
+            self.crc_type,
+            self.whitening_enable,
+        ])
+    }
+}
+
+/// LoRa Mode Packet Parameters
+#[derive(Debug, Clone)]
+pub struct LoRaPacketParams {
+    /// Preamble length in symbols
+    preamble_length: [u8; 2],
+    /// Header type (0=Variable/Explicit, 1=Fixed/Implicit)
+    header_type: u8,
+    /// Payload length
+    payload_length: u8,
+    /// CRC enable
+    crc_enable: u8,
+    /// IQ inversion enable
+    iq_inversion_enable: u8,
+}
+
+impl ToByteArray for LoRaPacketParams {
+    type Error = Infallible;
+    type Array = [u8; 9];
+
+    fn to_bytes(self) -> Result<Self::Array, Self::Error> {
+        Ok([
+            self.preamble_length[0],
+            self.preamble_length[1],
+            self.header_type,
+            self.payload_length,
+            self.crc_enable,
+            self.iq_inversion_enable,
+            0,
+            0,
+            0,
+        ])
     }
 }
 
