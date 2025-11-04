@@ -576,25 +576,105 @@ impl ToByteArray for PacketParams {
     }
 }
 
+/// The preamble length is a 16-bit value which represents the number of bytes which are sent by the
+/// radio. Each preamble byte represents an alternating 0.and 1, and each byte is coded as 0x55.
+#[derive(Debug, Clone)]
+pub struct PreambleLength(u16);
+
+/// The preamble detector acts as a gate to the packet controller, when different from 0x00
+/// (preamble detector length off) the packet controller only becomes actve if a cerain number of
+/// preamble bits have been successfully received by the radio.
+#[derive(Debug, Clone)]
+pub enum PreambleDetectorLength {
+    /// preamble detector length off
+    Off = 0x00,
+    /// preamble detector length 8 bits
+    _8Bits = 0x04,
+    /// preamble detector length 16 bits
+    _16Bits = 0x05,
+    /// preamble detector length 24 bits
+    _24Bits = 0x06,
+    /// preamble detector length 32 bits
+    _32Bits = 0x07,
+}
+
+/// The node address and the broadcast address are directly programmed into the device through
+/// simple register access.
+#[derive(Debug, Clone)]
+pub enum AddressFiltering {
+    /// Address Filtering Disable
+    Disable = 0x00,
+    /// Address Filtering activated on Node address
+    Node = 0x01,
+    /// Address Filtering activated on Node and broadcast addresses
+    NodeAndBroadcast = 0x02,
+}
+
+/// Packet Header Type
+#[derive(Debug, Clone)]
+pub enum GFSKPacketHeaderType {
+    /// The packet length is known on both sides, the size of the payload is not added to the
+    /// packet
+    ///
+    /// also called explicit
+    Fixed = 0x00,
+    /// The packet is of variable size, the first byte of the payload is the size of the packet
+    ///
+    /// also called implicit
+    Variable = 0x01,
+}
+
+/// Packet Header Type
+#[derive(Debug, Clone)]
+pub enum LoraPacketHeaderType {
+    /// The packet length is known on both sides, the size of the payload is not added to the
+    /// packet
+    ///
+    /// also called explicit
+    Fixed = 0x01, // inverse of GFSK 🙃
+    /// The packet is of variable size, the first byte of the payload is the size of the packet
+    ///
+    /// also called implicit
+    Variable = 0x00,
+}
+
+/// In the SX1261/2, the CRC can be fully configured and the polynomial used, and the initial
+/// values can be entered directly via register access.
+#[derive(Debug, Clone)]
+pub enum CrcType {
+    /// No CRC
+    CrcOff = 0x01,
+    /// CRC computed on 1 byte
+    Crc1Byte = 0x00,
+    /// CRC computed on 2 byte
+    Crc2Byte = 0x02,
+    /// CRC computed on 1 byte and inverted
+    Crc1ByteInv = 0x04,
+    /// CRC computed on 2 byte and inverted
+    Crc2ByteInv = 0x06,
+}
+
 /// GFSK Mode Packet Parameters
 #[derive(Debug, Clone)]
 pub struct GFSKPacketParams {
     /// Preamble length in bits
-    preamble_length: [u8; 2],
-    /// Preamble detector length (0=Off, 4-7=8-32 bits)
-    preamble_detector_length: u8,
-    /// Sync word length in bits
+    preamble_length: PreambleLength,
+    /// Preamble detector length
+    preamble_detector_length: PreambleDetectorLength,
+    /// The Sync Word is directly programmed into the device through simple register acceess. This
+    /// parameter describes the Sync Word length in bits (from 0 to 8 bytes)
     sync_word_length: u8,
-    /// Address filtering (0=Off, 1=Node, 2=Node+Broadcast)
-    address_filtering: u8,
-    /// Packet type (0=Fixed, 1=Variable)
-    packet_type: u8,
-    /// Payload length
+    /// Address filtering
+    address_filtering: AddressFiltering,
+    /// Packet type
+    packet_type: GFSKPacketHeaderType,
+    /// Size of the payload (in bytes) to transmit or maximum size of the payload that the receiver
+    /// can accept
     payload_length: u8,
     /// CRC type
-    crc_type: u8,
+    crc_type: CrcType,
     /// Whitening enable
-    whitening_enable: u8,
+    whitening_enable: bool,
 }
 
 impl ToByteArray for GFSKPacketParams {
@@ -602,16 +682,17 @@ impl ToByteArray for GFSKPacketParams {
     type Array = [u8; 9];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
+        let [p0, p1] = self.preamble_length.0.to_bytes()?;
         Ok([
-            self.preamble_length[0],
-            self.preamble_length[1],
-            self.preamble_detector_length,
+            p0,
+            p1,
+            self.preamble_detector_length as u8,
             self.sync_word_length,
-            self.address_filtering,
-            self.packet_type,
+            self.address_filtering as u8,
+            self.packet_type as u8,
             self.payload_length,
-            self.crc_type,
-            self.whitening_enable,
+            self.crc_type as u8,
+            self.whitening_enable as u8,
         ])
     }
 }
@@ -620,15 +701,15 @@ impl ToByteArray for GFSKPacketParams {
 #[derive(Debug, Clone)]
 pub struct LoRaPacketParams {
     /// Preamble length in symbols
-    preamble_length: [u8; 2],
-    /// Header type (0=Variable/Explicit, 1=Fixed/Implicit)
-    header_type: u8,
+    preamble_length: PreambleLength,
+    /// Header type
+    header_type: LoraPacketHeaderType,
     /// Payload length
     payload_length: u8,
     /// CRC enable
-    crc_enable: u8,
+    crc_enable: bool,
     /// IQ inversion enable
-    iq_inversion_enable: u8,
+    iq_inversion_enable: bool,
 }
 
 impl ToByteArray for LoRaPacketParams {
@@ -636,13 +717,14 @@ impl ToByteArray for LoRaPacketParams {
     type Array = [u8; 9];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
+        let [p0, p1] = self.preamble_length.0.to_bytes()?;
         Ok([
-            self.preamble_length[0],
-            self.preamble_length[1],
-            self.header_type,
+            p0,
+            p1,
+            self.header_type as u8,
             self.payload_length,
-            self.crc_enable,
-            self.iq_inversion_enable,
+            self.crc_enable as u8,
+            self.iq_inversion_enable as u8,
             0,
             0,
             0,
