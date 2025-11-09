@@ -579,7 +579,7 @@ impl ToByteArray for PacketParams {
 /// The preamble length is a 16-bit value which represents the number of bytes which are sent by the
 /// radio. Each preamble byte represents an alternating 0.and 1, and each byte is coded as 0x55.
 #[derive(Debug, Clone)]
-pub struct PreambleLength(u16);
+pub struct PreambleLength(pub u16);
 
 /// The preamble detector acts as a gate to the packet controller, when different from 0x00
 /// (preamble detector length off) the packet controller only becomes actve if a cerain number of
