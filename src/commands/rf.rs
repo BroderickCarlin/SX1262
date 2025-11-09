@@ -576,11 +576,6 @@ impl ToByteArray for PacketParams {
     }
 }
 
-/// The preamble length is a 16-bit value which represents the number of bytes which are sent by the
-/// radio. Each preamble byte represents an alternating 0.and 1, and each byte is coded as 0x55.
-#[derive(Debug, Clone)]
-pub struct PreambleLength(pub u16);
-
 /// The preamble detector acts as a gate to the packet controller, when different from 0x00
 /// (preamble detector length off) the packet controller only becomes actve if a cerain number of
 /// preamble bits have been successfully received by the radio.
@@ -589,13 +584,13 @@ pub enum PreambleDetectorLength {
     /// preamble detector length off
     Off = 0x00,
     /// preamble detector length 8 bits
-    _8Bits = 0x04,
+    Bits8 = 0x04,
     /// preamble detector length 16 bits
-    _16Bits = 0x05,
+    Bits16 = 0x05,
     /// preamble detector length 24 bits
-    _24Bits = 0x06,
+    Bits24 = 0x06,
     /// preamble detector length 32 bits
-    _32Bits = 0x07,
+    Bits32 = 0x07,
 }
 
 /// The node address and the broadcast address are directly programmed into the device through
@@ -624,7 +619,8 @@ pub enum GFSKPacketHeaderType {
     Variable = 0x01,
 }
 
-/// Packet Header Type
+/// When the byte HeaderType is at 0x00, the payload length, coding rate and the header CRC are
+/// added to the LoRa header and transported to the receiver.
 #[derive(Debug, Clone)]
 pub enum LoraPacketHeaderType {
     /// The packet length is known on both sides, the size of the payload is not added to the
@@ -658,23 +654,27 @@ pub enum CrcType {
 #[derive(Debug, Clone)]
 pub struct GFSKPacketParams {
     /// Preamble length in bits
-    preamble_length: PreambleLength,
+    ///
+    /// The preamble length is a 16-bit value which represents the number of bytes which are sent
+    /// by the radio. Each preamble byte represents an alternating 0 and 1, and each preamble byte
+    /// is coded as 0x55, so 0b01010101.
+    pub preamble_length: u16,
     /// Preamble detector length
-    preamble_detector_length: PreambleDetectorLength,
+    pub preamble_detector_length: PreambleDetectorLength,
     /// The Sync Word is directly programmed into the device through simple register acceess. This
     /// parameter describes the Sync Word length in bits (from 0 to 8 bytes)
-    sync_word_length: u8,
+    pub sync_word_length: u8,
     /// Address filtering
-    address_filtering: AddressFiltering,
+    pub address_filtering: AddressFiltering,
     /// Packet type
-    packet_type: GFSKPacketHeaderType,
+    pub packet_type: GFSKPacketHeaderType,
     /// Size of the payload (in bytes) to transmit or maximum size of the payload that the receiver
     /// can accept
-    payload_length: u8,
+    pub payload_length: u8,
     /// CRC type
-    crc_type: CrcType,
+    pub crc_type: CrcType,
     /// Whitening enable
-    whitening_enable: bool,
+    pub whitening_enable: bool,
 }
 
 impl ToByteArray for GFSKPacketParams {
@@ -682,7 +682,7 @@ impl ToByteArray for GFSKPacketParams {
     type Array = [u8; 9];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        let [p0, p1] = self.preamble_length.0.to_bytes()?;
+        let [p0, p1] = self.preamble_length.to_bytes()?;
         Ok([
             p0,
             p1,
@@ -701,15 +701,18 @@ impl ToByteArray for GFSKPacketParams {
 #[derive(Debug, Clone)]
 pub struct LoRaPacketParams {
     /// Preamble length in symbols
-    preamble_length: PreambleLength,
+    ///
+    /// The preamble length is a 16-bit value which represents the number of LoRa symbols which are
+    /// sent by the radio.
+    pub preamble_length: u16,
     /// Header type
-    header_type: LoraPacketHeaderType,
+    pub header_type: LoraPacketHeaderType,
     /// Payload length
-    payload_length: u8,
+    pub payload_length: u8,
     /// CRC enable
-    crc_enable: bool,
+    pub crc_enable: bool,
     /// IQ inversion enable
-    iq_inversion_enable: bool,
+    pub iq_inversion_enable: bool,
 }
 
 impl ToByteArray for LoRaPacketParams {
@@ -717,7 +720,7 @@ impl ToByteArray for LoRaPacketParams {
     type Array = [u8; 9];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        let [p0, p1] = self.preamble_length.0.to_bytes()?;
+        let [p0, p1] = self.preamble_length.to_bytes()?;
         Ok([
             p0,
             p1,
