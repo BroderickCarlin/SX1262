@@ -395,50 +395,27 @@ pub enum SpreadingFactor {
 /// Some bandwidths may not be available below 400MHz
 #[derive(Debug, Clone, Copy)]
 pub enum LoRaBandwidth {
-    /// 4.8 kHz bandwidth
-    /// Lowest data rate, highest sensitivity
-    Bw4 = 0x1F,
-    /// 5.8 kHz bandwidth
-    Bw5 = 0x17,
-    /// 7.3 kHz bandwidth
-    Bw7 = 0x0F,
-    /// 9.7 kHz bandwidth
-    Bw9 = 0x1E,
-    /// 11.7 kHz bandwidth
-    Bw11 = 0x16,
-    /// 14.6 kHz bandwidth
-    Bw14 = 0x0E,
-    /// 19.5 kHz bandwidth
-    Bw19 = 0x1D,
-    /// 23.4 kHz bandwidth
-    Bw23 = 0x15,
-    /// 29.3 kHz bandwidth
-    Bw29 = 0x0D,
-    /// 39 kHz bandwidth
-    Bw39 = 0x1C,
-    /// 46.9 kHz bandwidth
-    Bw46 = 0x14,
-    /// 58.6 kHz bandwidth
-    Bw58 = 0x0C,
-    /// 78.2 kHz bandwidth
-    Bw78 = 0x1B,
-    /// 93.8 kHz bandwidth
-    Bw93 = 0x13,
-    /// 117.3 kHz bandwidth
-    Bw117 = 0x0B,
-    /// 156.2 kHz bandwidth
-    Bw156 = 0x1A,
-    /// 187.2 kHz bandwidth
-    Bw187 = 0x12,
-    /// 234.3 kHz bandwidth
-    Bw234 = 0x0A,
-    /// 312 kHz bandwidth
-    Bw312 = 0x19,
-    /// 373.2 kHz bandwidth
-    Bw373 = 0x11,
-    /// 467 kHz bandwidth
+    /// 7.81 kHz bandwidth
+    Bw7 = 0x00,
+    /// 10.42 kHz bandwidth
+    Bw10 = 0x08,
+    /// 15.63 kHz bandwidth
+    Bw15 = 0x01,
+    /// 20.83 kHz bandwidth
+    Bw20 = 0x09,
+    /// 31.25 kHz bandwidth
+    Bw31 = 0x02,
+    /// 41.67 kHz bandwidth
+    Bw41 = 0x0a,
+    /// 62.50 kHz bandwidth
+    Bw62 = 0x03,
+    /// 125 kHz bandwidth
+    Bw125 = 0x04,
+    /// 250 kHz bandwidth
+    Bw250 = 0x05,
+    /// 500 kHz bandwidth
     /// Highest data rate, lowest sensitivity
-    Bw467 = 0x09,
+    Bw500 = 0x06,
 }
 
 /// LoRa coding rate options
