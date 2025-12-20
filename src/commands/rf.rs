@@ -532,28 +532,13 @@ impl Command for SetModulationParams {
 
 /// Packet parameters configuration
 ///
-/// Parameters interpretation depends on the packet type:
+/// Parameters interpretation depends on the packet type.
 ///
-/// # GFSK Mode
-/// - params[0-1]: Preamble length in bits
-/// - params[2]: Preamble detector length (0=Off, 4-7=8-32 bits)
-/// - params[3]: Sync word length in bits
-/// - params[4]: Address filtering (0=Off, 1=Node, 2=Node+Broadcast)
-/// - params[5]: Packet type (0=Fixed, 1=Variable)
-/// - params[6]: Payload length
-/// - params[7]: CRC type
-/// - params[8]: Whitening enable
-///
-/// # LoRa Mode
-/// - params[0-1]: Preamble length in symbols
-/// - params[2]: Header type (0=Variable/Explicit, 1=Fixed/Implicit)
-/// - params[3]: Payload length
-/// - params[4]: CRC enable
-/// - params[5]: IQ inversion enable
+/// see [`GFSKPacketParams`] and [`LoRaPacketParams`]
 #[derive(Debug, Clone)]
-pub struct PacketParams {
-    /// Raw packet parameters array
-    pub params: [u8; 9],
+pub enum PacketParams {
+    GFSK(GFSKPacketParams),
+    LoRa(LoRaPacketParams),
 }
 
 impl ToByteArray for PacketParams {
@@ -561,7 +546,169 @@ impl ToByteArray for PacketParams {
     type Array = [u8; 9];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        Ok(self.params)
+        match self {
+            PacketParams::GFSK(params) => params.to_bytes(),
+            PacketParams::LoRa(params) => params.to_bytes(),
+        }
+    }
+}
+
+/// The preamble detector acts as a gate to the packet controller, when different from 0x00
+/// (preamble detector length off) the packet controller only becomes actve if a cerain number of
+/// preamble bits have been successfully received by the radio.
+#[derive(Debug, Clone)]
+pub enum PreambleDetectorLength {
+    /// preamble detector length off
+    Off = 0x00,
+    /// preamble detector length 8 bits
+    Bits8 = 0x04,
+    /// preamble detector length 16 bits
+    Bits16 = 0x05,
+    /// preamble detector length 24 bits
+    Bits24 = 0x06,
+    /// preamble detector length 32 bits
+    Bits32 = 0x07,
+}
+
+/// The node address and the broadcast address are directly programmed into the device through
+/// simple register access.
+#[derive(Debug, Clone)]
+pub enum AddressFiltering {
+    /// Address Filtering Disable
+    Disable = 0x00,
+    /// Address Filtering activated on Node address
+    Node = 0x01,
+    /// Address Filtering activated on Node and broadcast addresses
+    NodeAndBroadcast = 0x02,
+}
+
+/// Packet Header Type
+#[derive(Debug, Clone)]
+pub enum GFSKPacketHeaderType {
+    /// The packet length is known on both sides, the size of the payload is not added to the
+    /// packet
+    ///
+    /// also called explicit
+    Fixed = 0x00,
+    /// The packet is of variable size, the first byte of the payload is the size of the packet
+    ///
+    /// also called implicit
+    Variable = 0x01,
+}
+
+/// When the byte HeaderType is at 0x00, the payload length, coding rate and the header CRC are
+/// added to the LoRa header and transported to the receiver.
+#[derive(Debug, Clone)]
+pub enum LoraPacketHeaderType {
+    /// The packet length is known on both sides, the size of the payload is not added to the
+    /// packet
+    ///
+    /// also called explicit
+    Fixed = 0x01, // inverse of GFSK 🙃
+    /// The packet is of variable size, the first byte of the payload is the size of the packet
+    ///
+    /// also called implicit
+    Variable = 0x00,
+}
+
+/// In the SX1261/2, the CRC can be fully configured and the polynomial used, and the initial
+/// values can be entered directly via register access.
+#[derive(Debug, Clone)]
+pub enum CrcType {
+    /// No CRC
+    CrcOff = 0x01,
+    /// CRC computed on 1 byte
+    Crc1Byte = 0x00,
+    /// CRC computed on 2 byte
+    Crc2Byte = 0x02,
+    /// CRC computed on 1 byte and inverted
+    Crc1ByteInv = 0x04,
+    /// CRC computed on 2 byte and inverted
+    Crc2ByteInv = 0x06,
+}
+
+/// GFSK Mode Packet Parameters
+#[derive(Debug, Clone)]
+pub struct GFSKPacketParams {
+    /// Preamble length in bits
+    ///
+    /// The preamble length is a 16-bit value which represents the number of bytes which are sent
+    /// by the radio. Each preamble byte represents an alternating 0 and 1, and each preamble byte
+    /// is coded as 0x55, so 0b01010101.
+    pub preamble_length: u16,
+    /// Preamble detector length
+    pub preamble_detector_length: PreambleDetectorLength,
+    /// The Sync Word is directly programmed into the device through simple register acceess. This
+    /// parameter describes the Sync Word length in bits (from 0 to 8 bytes)
+    pub sync_word_length: u8,
+    /// Address filtering
+    pub address_filtering: AddressFiltering,
+    /// Packet type
+    pub packet_type: GFSKPacketHeaderType,
+    /// Size of the payload (in bytes) to transmit or maximum size of the payload that the receiver
+    /// can accept
+    pub payload_length: u8,
+    /// CRC type
+    pub crc_type: CrcType,
+    /// Whitening enable
+    pub whitening_enable: bool,
+}
+
+impl ToByteArray for GFSKPacketParams {
+    type Error = Infallible;
+    type Array = [u8; 9];
+
+    fn to_bytes(self) -> Result<Self::Array, Self::Error> {
+        let [p0, p1] = self.preamble_length.to_bytes()?;
+        Ok([
+            p0,
+            p1,
+            self.preamble_detector_length as u8,
+            self.sync_word_length,
+            self.address_filtering as u8,
+            self.packet_type as u8,
+            self.payload_length,
+            self.crc_type as u8,
+            self.whitening_enable as u8,
+        ])
+    }
+}
+
+/// LoRa Mode Packet Parameters
+#[derive(Debug, Clone)]
+pub struct LoRaPacketParams {
+    /// Preamble length in symbols
+    ///
+    /// The preamble length is a 16-bit value which represents the number of LoRa symbols which are
+    /// sent by the radio.
+    pub preamble_length: u16,
+    /// Header type
+    pub header_type: LoraPacketHeaderType,
+    /// Payload length
+    pub payload_length: u8,
+    /// CRC enable
+    pub crc_enable: bool,
+    /// IQ inversion enable
+    pub iq_inversion_enable: bool,
+}
+
+impl ToByteArray for LoRaPacketParams {
+    type Error = Infallible;
+    type Array = [u8; 9];
+
+    fn to_bytes(self) -> Result<Self::Array, Self::Error> {
+        let [p0, p1] = self.preamble_length.to_bytes()?;
+        Ok([
+            p0,
+            p1,
+            self.header_type as u8,
+            self.payload_length,
+            self.crc_enable as u8,
+            self.iq_inversion_enable as u8,
+            0,
+            0,
+            0,
+        ])
     }
 }
 
