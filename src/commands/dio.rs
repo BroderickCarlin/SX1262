@@ -288,12 +288,12 @@ pub struct TcxoConfig {
 
 impl ToByteArray for TcxoConfig {
     type Error = Infallible;
-    type Array = [u8; 5];
+    type Array = [u8; 4];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        let mut bytes = [0u8; 5];
+        let mut bytes = [0u8; 4];
         bytes[0] = self.voltage as u8;
-        bytes[1..5].copy_from_slice(&self.delay.to_be_bytes());
+        bytes[1..4].copy_from_slice(&self.delay.to_be_bytes()[1..]);
         Ok(bytes)
     }
 }
