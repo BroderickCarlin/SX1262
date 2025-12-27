@@ -300,6 +300,10 @@ pub enum GfskBandwidth {
     Bw117 = 0x16,
     /// 14.6 kHz Double-Side Bandwidth
     Bw146 = 0x0E,
+    /// 19.5 kHz Double-Side Bandwidth
+    Bw195 = 0x1D,
+    /// 23.4 kHz Double-Side Bandwidth
+    Bw234 = 0x15,
     /// 29.3 kHz Double-Side Bandwidth
     Bw293 = 0x0D,
     /// 39 kHz Double-Side Bandwidth
@@ -316,7 +320,7 @@ pub enum GfskBandwidth {
     Bw1173 = 0x0B,
     /// 156.2 kHz Double-Side Bandwidth
     Bw1562 = 0x1A,
-    /// 1872 kHz Double-Side Bandwidth
+    /// 187.2 kHz Double-Side Bandwidth
     Bw1872 = 0x12,
     /// 232.3 kHz Double-Side Bandwidth
     Bw2323 = 0x0A,
