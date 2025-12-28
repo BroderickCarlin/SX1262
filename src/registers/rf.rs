@@ -27,28 +27,39 @@ pub struct RandomNumber {
 
 /// TX modulation register (address: 0x0889)
 ///
-/// Controls transmit modulation parameters, particularly for LoRa® bandwidth optimization.
+/// Controls transmit modulation parameters, particularly for LoRa bandwidth optimization.
 /// This register must be configured correctly based on the selected bandwidth to ensure
 /// optimal modulation quality.
 ///
 /// # Important Notes
-/// - For LoRa® BW=500kHz: Set bw_500khz_opt to false
-/// - For all other LoRa® BWs and FSK: Set bw_500khz_opt to true
 /// - Must be configured before each packet transmission
 #[register(0x0889u16)]
 #[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
 pub struct TxModulation {
-    /// Enable bandwidth optimization
-    /// - false = Optimized for 500kHz bandwidth
-    /// - true = Optimized for other bandwidths (default)
-    pub bw_500khz_opt: bool,
+    pub data: u8,
+}
+
+impl TxModulation {
+    /// Apply the workaround for LoRa 500kHz bandwidth optimization.
+    /// This should be set to true when using LoRa with 500kHz bandwidth,
+    /// and false for all other LoRa bandwidths and (G)FSK.
+    ///
+    /// See the datasheet chapter 15.1 for more details.
+    pub fn apply_lora_500khz_optimization(&mut self, do_optimize: bool) {
+        if do_optimize {
+            // clear bit 2 for lora 500kHz
+            self.data &= 0xFB;
+        } else {
+            // set bit 2 for (G)FSK and other LoRa bandwidths
+            self.data |= 0x04;
+        }
+    }
 }
 
 impl Default for TxModulation {
     fn default() -> Self {
-        Self {
-            bw_500khz_opt: true,
-        }
+        // Preserve the datasheet default (bit 0) and default to the non-500kHz setting (bit 2 set).
+        Self { data: 0x01 | 0x04 }
     }
 }
 
@@ -182,9 +193,7 @@ impl FromByteArray for TxModulation {
     type Array = [u8; 1];
 
     fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
-        Ok(Self {
-            bw_500khz_opt: bytes[0] & 0x04 != 0,
-        })
+        Ok(Self { data: bytes[0] })
     }
 }
 
@@ -193,7 +202,7 @@ impl ToByteArray for TxModulation {
     type Array = [u8; 1];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        Ok([if self.bw_500khz_opt { 0x04 } else { 0x00 }])
+        Ok([self.data])
     }
 }
 
