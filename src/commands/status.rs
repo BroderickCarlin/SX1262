@@ -467,6 +467,29 @@ impl Command for GetDeviceErrors {
     }
 }
 
+/// ClearDeviceErrors response
+///
+/// Contains the two status bytes returned by the command.
+#[derive(Debug, Clone, Copy)]
+pub struct ClearDeviceErrorsResponse {
+    /// First status byte
+    pub status_1: Status,
+    /// Second status byte
+    pub status_2: Status,
+}
+
+impl FromByteArray for ClearDeviceErrorsResponse {
+    type Error = StatusError;
+    type Array = [u8; 2];
+
+    fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
+        Ok(Self {
+            status_1: Status::from_bytes([bytes[0]])?,
+            status_2: Status::from_bytes([bytes[1]])?,
+        })
+    }
+}
+
 /// ClearDeviceErrors command (0x07)
 ///
 /// Clears all device error flags.
@@ -481,7 +504,7 @@ pub struct ClearDeviceErrors;
 impl Command for ClearDeviceErrors {
     type IdType = u8;
     type CommandParameters = NoParameters;
-    type ResponseParameters = NoParameters;
+    type ResponseParameters = ClearDeviceErrorsResponse;
 
     fn id() -> Self::IdType {
         0x07
