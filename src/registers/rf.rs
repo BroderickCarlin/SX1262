@@ -124,21 +124,26 @@ impl RxGain {
 /// over-voltage conditions, particularly important for the SX1262 high-power PA.
 ///
 /// # Important Notes
-/// - For SX1262: Set threshold to 0xF (1111) for optimal PA clamping threshold
+/// - For SX1262: Set to "<value> | 0x1E" (see 15.2.2 in datasheet)
 /// - For SX1261: Use default value
 /// - Must be configured after power-on reset or wake from cold start
 #[register(0x08D8u16)]
 #[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
 pub struct TxClampConfig {
-    /// PA clamping threshold bits [4:1]
-    /// - Default: 0x4 (0100)
-    /// - Optimal for SX1262: 0xF (1111)
-    pub threshold: u8,
+    config: u8,
+}
+
+impl TxClampConfig {
+    pub fn apply_sx1262_workaround(&mut self) {
+        self.config |= 0x1E;
+    }
 }
 
 impl Default for TxClampConfig {
     fn default() -> Self {
-        Self { threshold: 0x4 }
+        Self {
+            config: 0xC8 | 0x1E, // Default value for SX1262 with workaround applied
+        }
     }
 }
 
@@ -229,9 +234,7 @@ impl FromByteArray for TxClampConfig {
     type Array = [u8; 1];
 
     fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
-        Ok(Self {
-            threshold: (bytes[0] >> 1) & 0x0F,
-        })
+        Ok(Self { config: bytes[0] })
     }
 }
 
@@ -240,7 +243,7 @@ impl ToByteArray for TxClampConfig {
     type Array = [u8; 1];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        Ok([(self.threshold & 0x0F) << 1])
+        Ok([self.config])
     }
 }
 
