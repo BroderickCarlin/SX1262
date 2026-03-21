@@ -25,7 +25,6 @@
 //! ```
 
 use core::{convert::Infallible, fmt::Debug};
-use log::{info, warn};
 use regiface::{
     errors::Error as RegifaceError, ByteArray, Command, FromByteArray, ReadableRegister,
     ToByteArray, WritableRegister,
