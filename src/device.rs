@@ -24,8 +24,8 @@
 //! device.write_buffer(0, &[0x01, 0x02, 0x03])?;
 //! ```
 
-use core::convert::Infallible;
-
+use core::{convert::Infallible, fmt::Debug};
+use log::{info, warn};
 use regiface::{
     errors::Error as RegifaceError, ByteArray, Command, FromByteArray, ReadableRegister,
     ToByteArray, WritableRegister,
@@ -171,8 +171,13 @@ where
     where
         C: Command<IdType = u8>,
         C::CommandParameters: ToByteArray<Error = Infallible>,
+        <C as Command>::ResponseParameters: Debug,
     {
-        let request = command.invoking_parameters().to_bytes().unwrap();
+        let request = command
+            .invoking_parameters()
+            .to_bytes()
+            .map_err(|_| RegifaceError::SerializationError)?;
+
         let mut raw_response = <C::ResponseParameters as FromByteArray>::Array::new();
 
         self.spi
@@ -183,8 +188,14 @@ where
             ])
             .map_err(|_| RegifaceError::BusError)?;
 
-        C::ResponseParameters::from_bytes(raw_response)
-            .map_err(|_| RegifaceError::DeserializationError)
+        let response = C::ResponseParameters::from_bytes(raw_response);
+
+        let response = match response {
+            Ok(r) => Ok(r),
+            Err(e) => Err(e),
+        };
+
+        response.map_err(|_| RegifaceError::DeserializationError)
     }
 }
 
