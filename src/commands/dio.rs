@@ -138,7 +138,7 @@ pub struct GetIrqStatusResponse {
 
 impl FromByteArray for GetIrqStatusResponse {
     type Error = Infallible;
-    type Array = [u8; 3]; // 1 status byte + 2 IRQ bytes
+    type Array = [u8; 4]; // 1 RFU byte + 1 status byte + 2 IRQ-status bytes
 
     fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
         Ok(Self {
