@@ -14,7 +14,7 @@ use regiface::{register, FromByteArray, ReadableRegister, ToByteArray, WritableR
 
 const MAX_RETENTION_ENTRIES: usize = 4;
 
-/// Retention register (address: 0x02F9)
+/// Retention register (address: 0x029F)
 ///
 /// Used to store addresses of registers whose values
 /// should be retained during sleep mode.
@@ -25,7 +25,7 @@ const MAX_RETENTION_ENTRIES: usize = 4;
 /// - Up to 4 register addresses can be stored
 /// - Each entry is a 16-bit register address
 /// - The first byte indicates the number of valid entries
-#[regiface::register(0x02F9u16)]
+#[regiface::register(0x029Fu16)]
 #[derive(Debug, Copy, Clone, ReadableRegister, WritableRegister, Default)]
 pub struct RetentionList {
     /// Number of valid retention entries. Maximum: 4
