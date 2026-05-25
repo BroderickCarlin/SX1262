@@ -3,7 +3,7 @@
 //! This module contains commands for configuring RF parameters, modulation settings,
 //! and packet handling. These commands control:
 //! - RF frequency configuration
-//! - Packet type selection (LoRa/FSK)
+//! - Packet type selection (LoRa/FSK/LR-FHSS)
 //! - TX power and ramping
 //! - Modulation parameters
 //! - Packet formatting
@@ -81,6 +81,9 @@ pub enum PacketType {
     /// LoRa packet type (0x01)
     /// Supports spreading factors 5-12 and bandwidths 7.8-500kHz
     LoRa = 0x01,
+
+    /// LR-FHSS packet type (0x03)
+    LrFhss = 0x03,
 }
 
 impl FromByteArray for PacketType {
@@ -91,6 +94,7 @@ impl FromByteArray for PacketType {
         Ok(match bytes[0] {
             0x00 => Self::Gfsk,
             0x01 => Self::LoRa,
+            0x03 => Self::LrFhss,
             _ => Self::LoRa,
         })
     }
