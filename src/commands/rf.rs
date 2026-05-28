@@ -150,7 +150,7 @@ impl Command for GetPacketType {
     }
 
     fn invoking_parameters(self) -> Self::CommandParameters {
-        CommandParameters::default()
+        Self::CommandParameters::default()
     }
 }
 
