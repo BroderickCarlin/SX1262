@@ -146,7 +146,7 @@ pub struct GetPacketType;
 
 impl Command for GetPacketType {
     type IdType = u8;
-    type CommandParameters = regiface::Zeros::<1>;
+    type CommandParameters = regiface::Zeros<1>;
     type ResponseParameters = PacketType;
 
     fn id() -> Self::IdType {
