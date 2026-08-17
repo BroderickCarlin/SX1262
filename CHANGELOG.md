@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0](https://github.com/BroderickCarlin/SX1262/compare/v0.3.0...v0.4.0) - 2026-08-17
+
+### Added
+
+- make it even more type-safe through enums
+- replace raw bits with enum + sub types
+
+### Fixed
+
+- fix SetDio3AsTcxoCtrl command
+- all struct fields weren't public enough
+- PreambleLength inner field wasn't public enough
+
+### Other
+
+- *(Dependabot)* bump actions/checkout from 6 to 7
+- *(Dependabot)* bump taskmedia/action-conventional-commits
+- Fix formatting issue blocking CI
+- Merge pull request #36 from nikiwaibel/ADD-LRFHSS
+- Merge pull request #39 from nikiwaibel/FIX-GetPacketType
+- add Self::
+- add Zeros<1>
+- Merge pull request #31 from sionik/feature/fix-txclampconfig
+- Preserve full TxClampConfig register value on read
+- Merge pull request #28 from sionik/feature/fix-cleardeviceerrors
+- Fix ClearDeviceErrors status response
+- Preserve full TxModulation register value on read
+- Merge pull request #24 from sionik/feature/fix-SetDio3AsTcxoCtrl
+- Merge pull request #19 from JasmineLowen/packet-params-typed
+- remove unneeded readme section
+
 ## [0.3.0](https://github.com/BroderickCarlin/SX1262/compare/v0.2.2...v0.3.0) - 2025-10-24
 
 ### Other
