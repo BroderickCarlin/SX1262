@@ -177,12 +177,12 @@ pub struct GetRssiInstResponse {
 }
 
 impl FromByteArray for GetRssiInstResponse {
-    type Error = Infallible;
+    type Error = StatusError;
     type Array = [u8; 2]; // 1 status byte + 1 RSSI byte
 
     fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
         Ok(Self {
-            status: Status::from_bytes([bytes[0]]).unwrap(),
+            status: Status::from_bytes([bytes[0]])?,
             rssi: bytes[1],
         })
     }
@@ -253,13 +253,14 @@ pub struct GetRxBufferStatusResponse {
 }
 
 impl FromByteArray for GetRxBufferStatusResponse {
-    type Error = Infallible;
+    type Error = StatusError;
     type Array = [u8; 3]; // 1 status byte + 2 buffer bytes
 
     fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
         Ok(Self {
-            status: Status::from_bytes([bytes[0]]).unwrap(),
-            buffer_status: RxBufferStatus::from_bytes([bytes[1], bytes[2]]).unwrap(),
+            status: Status::from_bytes([bytes[0]])?,
+            buffer_status: RxBufferStatus::from_bytes([bytes[1], bytes[2]])
+                .expect("this is infallible"),
         })
     }
 }
@@ -338,13 +339,14 @@ pub struct GetPacketStatusResponse {
 }
 
 impl FromByteArray for GetPacketStatusResponse {
-    type Error = Infallible;
+    type Error = StatusError;
     type Array = [u8; 4]; // 1 status byte + 3 packet status bytes
 
     fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
         Ok(Self {
-            status: Status::from_bytes([bytes[0]]).unwrap(),
-            packet_status: PacketStatus::from_bytes([bytes[1], bytes[2], bytes[3]]).unwrap(),
+            status: Status::from_bytes([bytes[0]])?,
+            packet_status: PacketStatus::from_bytes([bytes[1], bytes[2], bytes[3]])
+                .expect("infallible"),
         })
     }
 }
@@ -430,13 +432,13 @@ pub struct GetDeviceErrorsResponse {
 }
 
 impl FromByteArray for GetDeviceErrorsResponse {
-    type Error = Infallible;
+    type Error = StatusError;
     type Array = [u8; 3]; // 1 status byte + 2 error bytes
 
     fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
         Ok(Self {
-            status: Status::from_bytes([bytes[0]]).unwrap(),
-            errors: DeviceErrors::from_bytes([bytes[1], bytes[2]]).unwrap(),
+            status: Status::from_bytes([bytes[0]])?,
+            errors: DeviceErrors::from_bytes([bytes[1], bytes[2]]).expect("infallible"),
         })
     }
 }
@@ -540,9 +542,9 @@ impl FromByteArray for Stats {
 
     fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
         Ok(Self {
-            packets_received: u16::from_be_bytes(bytes[0..2].try_into().unwrap()),
-            packets_crc_error: u16::from_be_bytes(bytes[2..4].try_into().unwrap()),
-            packets_header_error: u16::from_be_bytes(bytes[4..6].try_into().unwrap()),
+            packets_received: u16::from_be_bytes(bytes[0..2].try_into().expect("infallible")),
+            packets_crc_error: u16::from_be_bytes(bytes[2..4].try_into().expect("infallible")),
+            packets_header_error: u16::from_be_bytes(bytes[4..6].try_into().expect("infallible")),
         })
     }
 }
@@ -559,14 +561,14 @@ pub struct GetStatsResponse {
 }
 
 impl FromByteArray for GetStatsResponse {
-    type Error = Infallible;
+    type Error = StatusError;
     type Array = [u8; 7]; // 1 status byte + 6 stats bytes
 
     fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
         Ok(Self {
-            status: Status::from_bytes([bytes[0]]).unwrap(),
+            status: Status::from_bytes([bytes[0]])?,
             stats: Stats::from_bytes([bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6]])
-                .unwrap(),
+                .expect("infallible"),
         })
     }
 }
