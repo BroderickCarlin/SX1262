@@ -10,6 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: taskmedia/action-conventional-commits@v1.1.26
+      - uses: taskmedia/action-conventional-commits@v1.2.4
         with:
           types: "feat|fix|build|chore|ci|docs|style|refactor|perf|test"
