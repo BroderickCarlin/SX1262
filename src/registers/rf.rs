@@ -19,7 +19,7 @@ use regiface::{register, FromByteArray, ReadableRegister, ToByteArray, WritableR
 ///
 /// Reading this register returns a new random 32-bit value each time.
 #[register(0x0819u16)]
-#[derive(Debug, Clone, Copy, ReadableRegister)]
+#[derive(Debug, Clone, Copy, ReadableRegister, defmt::Format)]
 pub struct RandomNumber {
     /// 32-bit random number value
     pub value: u32,
@@ -34,7 +34,7 @@ pub struct RandomNumber {
 /// # Important Notes
 /// - Must be configured before each packet transmission
 #[register(0x0889u16)]
-#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
+#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, defmt::Format)]
 pub struct TxModulation {
     pub data: u8,
 }
@@ -64,7 +64,7 @@ impl Default for TxModulation {
 }
 
 /// Error type for RX gain mode conversion
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, defmt::Format)]
 pub struct InvalidGainMode(pub u8);
 
 /// RX gain register (address: 0x08AC)
@@ -83,7 +83,7 @@ pub struct InvalidGainMode(pub u8);
 /// Note: The RX Gain setting is not retained when waking from sleep mode. To include this
 /// register in retention memory, additional configuration is required.
 #[register(0x08ACu16)]
-#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
+#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, defmt::Format)]
 pub enum RxGain {
     /// Power saving gain mode (~4.2mA in DC-DC mode)
     /// Lower power consumption but reduced sensitivity
@@ -128,7 +128,7 @@ impl RxGain {
 /// - For SX1261: Use default value
 /// - Must be configured after power-on reset or wake from cold start
 #[register(0x08D8u16)]
-#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
+#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, defmt::Format)]
 pub struct TxClampConfig {
     config: u8,
 }
@@ -165,7 +165,7 @@ impl Default for TxClampConfig {
 ///   supply voltage as current draw is inversely proportional to VBAT
 /// - Value is automatically reconfigured when SetPaConfig() is called
 #[register(0x08E7u16)]
-#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
+#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, defmt::Format)]
 pub struct OcpConfiguration {
     /// OCP current limit in steps of 2.5mA
     /// - Range: 0x00-0xFF (0-637.5mA)

@@ -30,7 +30,7 @@ use regiface::{register, FromByteArray, ReadableRegister, ToByteArray, WritableR
 /// - DIO3 output configuration is ignored when used for TCXO control
 /// - DIOs are automatically configured when mapped to interrupts
 #[register(0x0580u16)]
-#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
+#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, defmt::Format)]
 pub struct DioOutputEnable {
     /// Enable DIO1 as output
     /// DIO1 is typically used as the primary interrupt line
@@ -55,7 +55,7 @@ pub struct DioOutputEnable {
 /// - Input configuration is overridden when DIO is used for RF switch or TCXO
 /// - Input state can be read even when configured as output
 #[register(0x0583u16)]
-#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
+#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, defmt::Format)]
 pub struct DioInputEnable {
     /// Enable DIO1 as input
     pub dio1: bool,
@@ -78,7 +78,7 @@ pub struct DioInputEnable {
 /// - Pull-up is ~50kΩ at typical conditions
 /// - Pull-up configuration ignored when pin used for RF switch/TCXO
 #[register(0x0584u16)]
-#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
+#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, defmt::Format)]
 pub struct DioPullUpControl {
     /// Enable pull-up on DIO1
     pub dio1: bool,
@@ -101,7 +101,7 @@ pub struct DioPullUpControl {
 /// - Pull-down is ~50kΩ at typical conditions
 /// - Pull-down configuration ignored when pin used for RF switch/TCXO
 #[register(0x0585u16)]
-#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
+#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, defmt::Format)]
 pub struct DioPullDownControl {
     /// Enable pull-down on DIO1
     pub dio1: bool,
@@ -113,7 +113,7 @@ pub struct DioPullDownControl {
     pub dio3: bool,
 }
 
-#[derive(Debug)]
+#[derive(Debug, defmt::Format)]
 pub struct InvalidVoltageError {
     pub value: u8,
 }
@@ -129,7 +129,7 @@ pub struct InvalidVoltageError {
 /// - Takes up to 100μs to reach regulated voltage
 /// - Used in conjunction with SetDIO3AsTCXOCtrl command
 #[register(0x0920u16)]
-#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
+#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, defmt::Format)]
 pub enum Dio3OutputVoltage {
     /// (min VBAT = 1.8V)
     V1_6 = 0x00,

@@ -23,7 +23,7 @@ use crate::{Command, NoParameters, ToByteArray};
 /// Used to set the RF frequency for both TX and RX operations.
 /// The frequency is calculated as: RF = frequency_in_hz * FXTAL / 2^25
 /// where FXTAL is typically 32MHz.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct RfFrequencyConfig {
     /// RF frequency in Hz
     /// Valid range: 150MHz to 960MHz
@@ -51,7 +51,7 @@ impl ToByteArray for RfFrequencyConfig {
 /// - Must be called while in STDBY_RC mode
 /// - For frequencies below 400MHz, some bandwidths may not be available
 /// - The frequency resolution (PLL step) is ~0.95Hz
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct SetRfFrequency {
     /// RF frequency configuration
     pub config: RfFrequencyConfig,
@@ -72,7 +72,7 @@ impl Command for SetRfFrequency {
 }
 
 /// Packet type options for radio configuration
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub enum PacketType {
     /// GFSK packet type (0x00)
     /// Supports bit rates from 0.6 to 300kbps
@@ -118,7 +118,7 @@ impl ToByteArray for PacketType {
 /// - Must be called while in STDBY_RC mode
 /// - Parameters from previous mode are not retained
 /// - Modulation and packet parameters must be reconfigured after changing type
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct SetPacketType {
     /// Packet type selection
     pub packet_type: PacketType,
@@ -141,7 +141,7 @@ impl Command for SetPacketType {
 /// GetPacketType command (0x11)
 ///
 /// Returns the current packet type configuration.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct GetPacketType;
 
 impl Command for GetPacketType {
@@ -159,7 +159,7 @@ impl Command for GetPacketType {
 }
 
 /// Power amplifier ramp time options
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub enum RampTime {
     /// 10 μs ramp time
     Micros10 = 0x00,
@@ -180,7 +180,7 @@ pub enum RampTime {
 }
 
 /// TX parameters configuration
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct TxParams {
     /// Output power in dBm
     /// - SX1261: -17 to +14 dBm
@@ -213,7 +213,7 @@ impl ToByteArray for TxParams {
 /// - Power is set in 1dB steps
 /// - Ramp time affects spectral emissions and time-on-air
 /// - Must be configured after SetPaConfig
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct SetTxParams {
     /// TX parameters configuration
     pub params: TxParams,
@@ -245,7 +245,7 @@ impl Command for SetTxParams {
 /// - Ensure bandwidth > 2 * (frequency_deviation + bit_rate/2)
 /// - Pulse shaping affects spectral efficiency and occupied bandwidth
 /// - Higher bit rates require wider bandwidths
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct GfskModParams {
     /// Bit rate in bits per second
     /// Valid range: 600 bps to 300 kbps
@@ -264,7 +264,7 @@ pub struct GfskModParams {
 /// Gaussian filtering reduces spectral spreading but increases
 /// intersymbol interference. Higher BT products reduce ISI
 /// at the cost of wider bandwidth.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub enum GfskPulseShape {
     /// No pulse shaping filter
     NoFilter = 0x00,
@@ -290,7 +290,7 @@ pub enum GfskPulseShape {
 /// - Expected frequency error
 ///
 /// Wider bandwidths allow higher data rates but reduce selectivity
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub enum GfskBandwidth {
     /// 4.8 kHz Double-Side Bandwidth
     Bw48 = 0x1F,
@@ -349,7 +349,7 @@ pub enum GfskBandwidth {
 /// - Wider bandwidths increase data rate but reduce sensitivity
 /// - Enable low data rate optimization when symbol length ≥ 16.38ms
 /// - Coding rate adds redundancy at the cost of time-on-air
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct LoRaModParams {
     /// Spreading Factor (chip/symbol)
     pub spreading_factor: SpreadingFactor,
@@ -371,7 +371,7 @@ pub struct LoRaModParams {
 /// - Reduce tolerance to frequency offset
 ///
 /// SF5/SF6 have restrictions on header and CRC usage
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub enum SpreadingFactor {
     /// SF5 - 32 chips/symbol
     /// Fastest data rate, shortest range
@@ -401,7 +401,7 @@ pub enum SpreadingFactor {
 /// - Increase tolerance to frequency offset
 ///
 /// Some bandwidths may not be available below 400MHz
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub enum LoRaBandwidth {
     /// 7.81 kHz bandwidth
     Bw7 = 0x00,
@@ -433,7 +433,7 @@ pub enum LoRaBandwidth {
 /// - Increase reliability in noisy conditions
 /// - Increase time-on-air
 /// - Reduce effective data rate
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub enum CodingRate {
     /// 4/5 coding rate
     /// Lowest redundancy (1.25x overhead)
@@ -472,7 +472,7 @@ pub enum CodingRate {
 /// - Parameters must match the selected packet type
 /// - Configuration affects sensitivity, range, and data rate
 /// - Some parameter combinations may be invalid or suboptimal
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub enum ModulationParams {
     /// GFSK modulation configuration
     Gfsk(GfskModParams),
@@ -518,7 +518,7 @@ impl ToByteArray for ModulationParams {
 /// - For LoRa, low data rate optimization should be enabled for
 ///   symbol times ≥ 16.38ms
 /// - For GFSK, ensure bandwidth > 2*(frequency_deviation + bit_rate/2)
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct SetModulationParams {
     /// Modulation parameters
     pub params: ModulationParams,
@@ -543,7 +543,7 @@ impl Command for SetModulationParams {
 /// Parameters interpretation depends on the packet type.
 ///
 /// see [`GFSKPacketParams`] and [`LoRaPacketParams`]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub enum PacketParams {
     GFSK(GFSKPacketParams),
     LoRa(LoRaPacketParams),
@@ -564,7 +564,7 @@ impl ToByteArray for PacketParams {
 /// The preamble detector acts as a gate to the packet controller, when different from 0x00
 /// (preamble detector length off) the packet controller only becomes actve if a cerain number of
 /// preamble bits have been successfully received by the radio.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub enum PreambleDetectorLength {
     /// preamble detector length off
     Off = 0x00,
@@ -580,7 +580,7 @@ pub enum PreambleDetectorLength {
 
 /// The node address and the broadcast address are directly programmed into the device through
 /// simple register access.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub enum AddressFiltering {
     /// Address Filtering Disable
     Disable = 0x00,
@@ -591,7 +591,7 @@ pub enum AddressFiltering {
 }
 
 /// Packet Header Type
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub enum GFSKPacketHeaderType {
     /// The packet length is known on both sides, the size of the payload is not added to the
     /// packet
@@ -606,7 +606,7 @@ pub enum GFSKPacketHeaderType {
 
 /// When the byte HeaderType is at 0x00, the payload length, coding rate and the header CRC are
 /// added to the LoRa header and transported to the receiver.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub enum LoraPacketHeaderType {
     /// The packet length is known on both sides, the size of the payload is not added to the
     /// packet
@@ -621,7 +621,7 @@ pub enum LoraPacketHeaderType {
 
 /// In the SX1261/2, the CRC can be fully configured and the polynomial used, and the initial
 /// values can be entered directly via register access.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub enum CrcType {
     /// No CRC
     CrcOff = 0x01,
@@ -636,7 +636,7 @@ pub enum CrcType {
 }
 
 /// GFSK Mode Packet Parameters
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct GFSKPacketParams {
     /// Preamble length in bits
     ///
@@ -683,7 +683,7 @@ impl ToByteArray for GFSKPacketParams {
 }
 
 /// LoRa Mode Packet Parameters
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct LoRaPacketParams {
     /// Preamble length in symbols
     ///
@@ -730,7 +730,7 @@ impl ToByteArray for LoRaPacketParams {
 /// - For GFSK with address filtering, max payload is 254 bytes
 /// - For LoRa implicit header, payload length must match on TX/RX
 /// - Preamble detector length must be shorter than sync word
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct SetPacketParams {
     /// Packet parameters
     pub params: PacketParams,
@@ -752,7 +752,7 @@ impl Command for SetPacketParams {
 
 /// Channel Activity Detection (CAD) parameters
 /// LoRa mode only
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct CadParams {
     /// Number of symbols for CAD detection (0=1, 1=2, 2=4, 3=8, 4=16)
     pub cad_symbol_num: u8,
@@ -790,7 +790,7 @@ impl ToByteArray for CadParams {
 /// - CAD can detect both preamble and data symbols
 /// - Detection thresholds depend on SF/BW and symbol count
 /// - In CAD_RX mode, device stays in RX if activity detected
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct SetCadParams {
     /// CAD parameters
     pub params: CadParams,
@@ -811,7 +811,7 @@ impl Command for SetCadParams {
 }
 
 /// Buffer base addresses configuration
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct BufferBaseAddressConfig {
     /// TX base address in data buffer (0-255)
     pub tx_base_addr: u8,
@@ -836,7 +836,7 @@ impl ToByteArray for BufferBaseAddressConfig {
 /// - Buffer is cleared in Sleep mode
 /// - In RX, if packet exceeds allocated space it can overwrite TX area
 /// - Base addresses can be anywhere in 0-255 range
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct SetBufferBaseAddress {
     /// Buffer base addresses configuration
     pub config: BufferBaseAddressConfig,
@@ -857,7 +857,7 @@ impl Command for SetBufferBaseAddress {
 }
 
 /// LoRa symbol number timeout configuration
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct LoRaSymbNumTimeout {
     /// Number of symbols to validate reception
     /// 0 = Validate on first symbol
@@ -884,7 +884,7 @@ impl ToByteArray for LoRaSymbNumTimeout {
 /// - 0 = Accept first symbol detection
 /// - >0 = Wait for specified symbols before timeout
 /// - Helps prevent false detections in noisy environments
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct SetLoRaSymbNumTimeout {
     /// LoRa symbol timeout configuration
     pub config: LoRaSymbNumTimeout,
