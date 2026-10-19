@@ -44,6 +44,7 @@ pub enum StatusError {
 /// Represents the current state of the radio's state machine.
 /// Extracted from status byte bits 6:4.
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum OperatingMode {
     /// STDBY_RC mode: RC oscillator running
     StandbyRc = 0x2,
@@ -77,6 +78,7 @@ impl TryFrom<u8> for OperatingMode {
 /// Indicates the result of the last command execution.
 /// Extracted from status byte bits 3:1.
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum CommandStatus {
     /// Data is available to be read from the radio
     DataAvailable = 0x2,
@@ -116,6 +118,7 @@ impl TryFrom<u8> for CommandStatus {
 /// - Bits 3:1: Command status
 /// - Bits 0: Reserved
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Status {
     /// Current operating mode of the device
     pub mode: OperatingMode,
@@ -220,6 +223,7 @@ impl Command for GetRssiInst {
 ///
 /// Contains information about received packet in buffer.
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct RxBufferStatus {
     /// Length of received payload in bytes
     pub payload_length: u8,
@@ -245,6 +249,7 @@ impl FromByteArray for RxBufferStatus {
 ///
 /// Contains the device status and RX buffer information.
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct GetRxBufferStatusResponse {
     /// Device status from the first response byte
     pub status: Status,
@@ -274,6 +279,7 @@ impl FromByteArray for GetRxBufferStatusResponse {
 /// - Data remains valid until next RX operation
 /// - Use with ReadBuffer to retrieve payload
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct GetRxBufferStatus;
 
 impl Command for GetRxBufferStatus {
@@ -380,6 +386,7 @@ impl Command for GetPacketStatus {
 ///
 /// Contains flags for various error conditions.
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DeviceErrors {
     /// RC64k calibration error
     pub rc64k_calib_err: bool,
@@ -422,6 +429,7 @@ impl FromByteArray for DeviceErrors {
 ///
 /// Contains the device status and error flags.
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct GetDeviceErrorsResponse {
     /// Device status from the first response byte
     pub status: Status,
@@ -471,6 +479,7 @@ impl Command for GetDeviceErrors {
 ///
 /// Contains the two status bytes returned by the command.
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ClearDeviceErrorsResponse {
     /// First status byte
     pub status_1: Status,

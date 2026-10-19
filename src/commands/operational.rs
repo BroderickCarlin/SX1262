@@ -204,6 +204,7 @@ impl Command for SetTx {
 
 /// RX operation mode
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum RxMode {
     /// Return after receiving a single packet
     Single,
@@ -235,6 +236,7 @@ impl From<RxMode> for Timeout {
 ///   - Timeout period elapsed (Timed mode only)
 /// - Timeout disabled once valid packet detected
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct SetRx {
     /// RX operation mode
     pub mode: RxMode,
@@ -681,6 +683,7 @@ impl Command for SetPaConfig {
 ///
 /// Defines mode to enter after packet operation.
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum FallbackMode {
     /// Go to FS mode
     /// Fastest transition to next TX/RX
@@ -714,6 +717,7 @@ impl ToByteArray for FallbackMode {
 /// - Affects power consumption when idle
 /// - Takes effect after TxDone/RxDone/Timeout
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct SetRxTxFallbackMode {
     /// Fallback mode selection
     pub mode: FallbackMode,

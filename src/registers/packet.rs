@@ -197,6 +197,7 @@ impl Default for IqPolaritySetup {
 /// Sync word must match between all devices in the same network.
 #[register(0x0740u16)]
 #[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct LoraSyncWord {
     /// Sync word value
     /// Default: 0x1424
