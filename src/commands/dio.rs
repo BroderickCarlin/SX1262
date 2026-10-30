@@ -15,9 +15,8 @@ use core::convert::Infallible;
 use crate::commands::status::Status;
 use crate::{Command, FromByteArray, NoParameters, ToByteArray};
 
-bitflags::bitflags! {
+defmt::bitflags! {
     /// IRQ flags for the SX126x radio
-    #[derive(Debug, Clone, Copy)]
     pub struct IrqMask: u16 {
         /// Packet transmission completed
         const TX_DONE = 1 << 0;
@@ -62,7 +61,7 @@ impl FromByteArray for IrqMask {
 ///
 /// Used to configure which interrupts are enabled and how they
 /// are mapped to DIO pins.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct DioIrqConfig {
     /// IRQ enable mask
     pub irq_mask: IrqMask,
@@ -105,7 +104,7 @@ impl ToByteArray for DioIrqConfig {
 /// - IRQ must be mapped to a DIO to appear on that pin
 /// - Multiple IRQs can be mapped to same DIO (OR function)
 /// - DIO2/3 mappings ignored if used for RF switch/TCXO
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct SetDioIrqParams {
     /// DIO and IRQ configuration parameters
     pub config: DioIrqConfig,
@@ -128,7 +127,7 @@ impl Command for SetDioIrqParams {
 /// GetIrqStatus response
 ///
 /// Contains the device status and current interrupt flags.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct GetIrqStatusResponse {
     /// Device status from the first response byte
     pub status: Status,
@@ -158,7 +157,7 @@ impl FromByteArray for GetIrqStatusResponse {
 /// - Flags remain set until explicitly cleared
 /// - Reading status does not clear flags
 /// - Use ClearIrqStatus to clear flags
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct GetIrqStatus;
 
 impl Command for GetIrqStatus {
@@ -183,7 +182,7 @@ impl Command for GetIrqStatus {
 /// - Only clears flags with corresponding mask bits set
 /// - Multiple flags can be cleared in single command
 /// - Clearing flag removes it from IRQ register and DIO
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct ClearIrqStatus {
     /// IRQ flags to clear
     pub irq_mask: IrqMask,
@@ -204,7 +203,7 @@ impl Command for ClearIrqStatus {
 }
 
 /// RF switch control configuration
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct RfSwitchConfig {
     /// Enable RF switch control on DIO2
     /// - true = DIO2 controls RF switch
@@ -229,7 +228,7 @@ impl ToByteArray for RfSwitchConfig {
 /// - When enabled, DIO2 = 1 in TX mode, 0 otherwise
 /// - Overrides any IRQ mapping to DIO2
 /// - DIO2 changes state a few μs before PA ramp-up/down
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct SetDio2AsRfSwitchCtrl {
     /// RF switch configuration
     pub config: RfSwitchConfig,
@@ -253,7 +252,7 @@ impl Command for SetDio2AsRfSwitchCtrl {
 ///
 /// Available voltage options for TCXO power supply.
 /// VBAT must be at least 200mV higher than selected voltage.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub enum TcxoVoltage {
     /// 1.6V (min VBAT = 1.8V)
     V1_6 = 0x00,
@@ -274,7 +273,7 @@ pub enum TcxoVoltage {
 }
 
 /// TCXO control configuration
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct TcxoConfig {
     /// TCXO supply voltage
     pub voltage: TcxoVoltage,
@@ -311,7 +310,7 @@ impl ToByteArray for TcxoConfig {
 /// - Chip waits specified delay after enabling TCXO
 /// - Overrides any IRQ mapping to DIO3
 /// - Complete reset required to return to XOSC mode
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct SetDio3AsTcxoCtrl {
     /// TCXO configuration
     pub config: TcxoConfig,

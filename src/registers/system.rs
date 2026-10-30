@@ -26,7 +26,7 @@ const MAX_RETENTION_ENTRIES: usize = 4;
 /// - Each entry is a 16-bit register address
 /// - The first byte indicates the number of valid entries
 #[regiface::register(0x029Fu16)]
-#[derive(Debug, Copy, Clone, ReadableRegister, WritableRegister, Default)]
+#[derive(Debug, Copy, Clone, ReadableRegister, WritableRegister, Default, defmt::Format)]
 pub struct RetentionList {
     /// Number of valid retention entries. Maximum: 4
     n_entries: u8,
@@ -89,7 +89,7 @@ impl RetentionList {
 /// - RTC should be stopped after implicit header timeout
 /// - RTC uses the RC64k oscillator as time base
 #[register(0x0902u16)]
-#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, Default)]
+#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, Default, defmt::Format)]
 pub struct RtcControl {
     /// Enable RTC operation
     /// - true = RTC enabled
@@ -110,7 +110,7 @@ pub struct RtcControl {
 /// - Must be in STDBY_XOSC to change value
 /// - Changes before STDBY_XOSC will be overwritten
 #[register(0x0911u16)]
-#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
+#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, defmt::Format)]
 pub struct XtaTrim {
     /// XTA pin capacitance trimming
     /// - Steps of 0.47pF
@@ -141,7 +141,7 @@ impl Default for XtaTrim {
 /// - Changes before STDBY_XOSC will be overwritten
 /// - When using TCXO, XTB should be left unconnected
 #[register(0x0912u16)]
-#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
+#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, defmt::Format)]
 pub struct XtbTrim {
     /// XTB pin capacitance trimming
     /// - Steps of 0.47pF
@@ -169,7 +169,7 @@ impl Default for XtbTrim {
 /// - Part of workaround for implicit header timeout behavior
 /// - Should be used carefully as it affects system responsiveness
 #[register(0x0944u16)]
-#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, Default)]
+#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, Default, defmt::Format)]
 pub struct EventMask {
     /// Event mask bits
     /// Each bit masks a specific event type:

@@ -28,7 +28,7 @@ use regiface::{register, FromByteArray, ReadableRegister, ToByteArray, WritableR
 /// with long strings of 0's and 1's. If data is already random,
 /// whitening is not needed.
 #[register(0x06B8u16)]
-#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
+#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, defmt::Format)]
 pub struct WhiteningInitialValue {
     /// Initial value for whitening LFSR
     /// Default: 0x0100
@@ -52,7 +52,7 @@ impl Default for WhiteningInitialValue {
 ///
 /// The initial value is used as the starting state for the CRC calculation.
 #[register(0x06BCu16)]
-#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
+#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, defmt::Format)]
 pub struct CrcInitialValue {
     /// Initial CRC value
     /// Default: 0x1D0F
@@ -78,7 +78,7 @@ impl Default for CrcInitialValue {
 /// The CRC configuration (polynomial and initial value) must match between
 /// transmitter and receiver for proper packet validation.
 #[register(0x06BEu16)]
-#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
+#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, defmt::Format)]
 pub struct CrcPolynomial {
     /// CRC polynomial value
     /// Default: 0x1021
@@ -101,7 +101,7 @@ impl Default for CrcPolynomial {
 /// - Preamble detector length must be shorter than sync word length
 /// - Sync word must match exactly between TX and RX
 #[register(0x06C0u16)]
-#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
+#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, defmt::Format)]
 pub struct SyncWord {
     /// 8-byte sync word value
     /// Each byte is written to consecutive addresses starting at 0x06C0
@@ -122,7 +122,7 @@ pub struct SyncWord {
 /// # Note
 /// When address filtering is enabled, maximum payload length is 254 bytes.
 #[register(0x06CDu16)]
-#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, Default)]
+#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, Default, defmt::Format)]
 pub struct NodeAddress {
     /// Node address for filtering
     /// Default: 0x00
@@ -135,7 +135,7 @@ pub struct NodeAddress {
 /// Packets with this address will be accepted when Node+Broadcast
 /// filtering is enabled.
 #[register(0x06CEu16)]
-#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, Default)]
+#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, Default, defmt::Format)]
 pub struct BroadcastAddress {
     /// Broadcast address for filtering
     /// Default: 0x00
@@ -153,7 +153,7 @@ pub struct BroadcastAddress {
 ///   - 1 when using standard IQ
 /// - Setting affects packet reception and network compatibility
 #[register(0x0736u16)]
-#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
+#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, defmt::Format)]
 pub struct IqPolaritySetup {
     /// Register value
     pub data: u8,
@@ -196,7 +196,7 @@ impl Default for IqPolaritySetup {
 /// # Note
 /// Sync word must match between all devices in the same network.
 #[register(0x0740u16)]
-#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister)]
+#[derive(Debug, Clone, Copy, ReadableRegister, WritableRegister, defmt::Format)]
 pub struct LoraSyncWord {
     /// Sync word value
     /// Default: 0x1424

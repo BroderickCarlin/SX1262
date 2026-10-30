@@ -13,17 +13,15 @@
 //! Mode transitions have specific timing requirements detailed in
 //! the documentation for each command.
 
-use bitflags::bitflags;
 use core::convert::Infallible;
 
 use crate::{Command, NoParameters, ToByteArray};
 
-bitflags! {
+defmt::bitflags! {
     /// Sleep configuration options
     ///
     /// Controls behavior during sleep mode, including configuration
     /// retention and wake-up sources.
-    #[derive(Debug, Clone, Copy)]
     pub struct SleepConfig: u8 {
         /// When set, configuration is retained in sleep mode (warm start)
         /// When clear, cold start - all registers reset to defaults
@@ -53,7 +51,7 @@ impl ToByteArray for SleepConfig {
 /// - No SPI commands should be sent during this time
 /// - Device unresponsive until woken by NSS or RTC
 /// - Current consumption ~160nA (cold) / 600nA (warm)
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct SetSleep {
     /// Sleep configuration
     pub config: SleepConfig,
@@ -76,7 +74,7 @@ impl Command for SetSleep {
 /// Standby mode configuration
 ///
 /// Selects which oscillator to use in standby mode.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub enum StandbyConfig {
     /// Device running on RC13M (~0.6mA)
     /// Used for configuration and lower power
@@ -105,7 +103,7 @@ impl ToByteArray for StandbyConfig {
 /// - Most configuration must be done in STDBY_RC
 /// - STDBY_XOSC provides faster transition to TX/RX
 /// - DC-DC configuration only possible in STDBY_RC
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct SetStandby {
     /// Standby mode configuration
     pub config: StandbyConfig,
@@ -135,7 +133,7 @@ impl Command for SetStandby {
 /// - Automatically entered during TX/RX transitions
 /// - BUSY goes low when PLL locked
 /// - Takes ~40μs from STDBY_XOSC
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct SetFs;
 
 impl Command for SetFs {
@@ -156,7 +154,7 @@ impl Command for SetFs {
 ///
 /// Used to automatically terminate TX/RX operations
 /// after specified period.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct Timeout(pub u32);
 
 impl ToByteArray for Timeout {
@@ -181,7 +179,7 @@ impl ToByteArray for Timeout {
 ///   - Packet transmitted (TxDone IRQ)
 ///   - Timeout period elapsed
 /// - Timeout = 0x000000 disables timeout
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct SetTx {
     /// Timeout in steps of 15.625 μs
     /// Maximum timeout is 262s
@@ -203,7 +201,7 @@ impl Command for SetTx {
 }
 
 /// RX operation mode
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub enum RxMode {
     /// Return after receiving a single packet
     Single,
@@ -234,7 +232,7 @@ impl From<RxMode> for Timeout {
 ///   - Packet received (RxDone IRQ)
 ///   - Timeout period elapsed (Timed mode only)
 /// - Timeout disabled once valid packet detected
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct SetRx {
     /// RX operation mode
     pub mode: RxMode,
@@ -254,11 +252,10 @@ impl Command for SetRx {
     }
 }
 
-bitflags! {
+defmt::bitflags! {
     /// StopTimerOnPreamble configuration
     ///
     /// Controls when RX timeout timer is stopped.
-    #[derive(Debug, Clone, Copy)]
     pub struct StopTimerOnPreambleConfig: u8 {
         /// When set, stop timer on preamble detection
         /// When clear, stop on Sync/Header (default)
@@ -283,7 +280,7 @@ impl ToByteArray for StopTimerOnPreambleConfig {
 /// - Default is to stop on Sync/Header detection
 /// - Stopping on preamble may cause extended RX
 ///   if false detection occurs
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct StopTimerOnPreamble {
     /// Stop on preamble configuration
     pub config: StopTimerOnPreambleConfig,
@@ -306,7 +303,7 @@ impl Command for StopTimerOnPreamble {
 /// RxDutyCycle configuration
 ///
 /// Controls periodic wake-up for packet reception.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct RxDutyCycleConfig {
     /// RX period in steps of 15.625 μs
     /// Time radio spends in RX mode
@@ -340,7 +337,7 @@ impl ToByteArray for RxDutyCycleConfig {
 /// - Loop terminates on:
 ///   - Packet received (RxDone IRQ)
 ///   - SetStandby command during RX
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct SetRxDutyCycle {
     /// Duty cycle configuration
     pub config: RxDutyCycleConfig,
@@ -370,7 +367,7 @@ impl Command for SetRxDutyCycle {
 /// - Returns to STDBY_RC after detection
 /// - Triggers CADDone and optionally CADDetected IRQs
 /// - Parameters set by SetCadParams command
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct SetCad;
 
 impl Command for SetCad {
@@ -395,7 +392,7 @@ impl Command for SetCad {
 /// - Test command for measuring RF performance
 /// - Transmits unmodulated carrier at set frequency
 /// - Stays in TX until mode changed by command
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct SetTxContinuousWave;
 
 impl Command for SetTxContinuousWave {
@@ -421,7 +418,7 @@ impl Command for SetTxContinuousWave {
 /// - FSK: Alternating 0/1 sequence
 /// - LoRa: Continuous preamble symbols
 /// - Stays in TX until mode changed by command
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct SetTxInfinitePreamble;
 
 impl Command for SetTxInfinitePreamble {
@@ -441,7 +438,7 @@ impl Command for SetTxInfinitePreamble {
 /// Regulator mode configuration
 ///
 /// Selects voltage regulator configuration.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub enum RegulatorMode {
     /// Only LDO used for all modes
     /// - Lower cost (no inductor needed)
@@ -473,7 +470,7 @@ impl ToByteArray for RegulatorMode {
 /// - DC-DC requires 15μH inductor
 /// - LDO remains active with DC-DC as backup
 /// - Mode persists until changed or sleep
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct SetRegulatorMode {
     /// Regulator mode selection
     pub mode: RegulatorMode,
@@ -493,11 +490,10 @@ impl Command for SetRegulatorMode {
     }
 }
 
-bitflags! {
+defmt::bitflags! {
     /// Calibration configuration
     ///
     /// Selects which blocks to calibrate.
-    #[derive(Debug, Clone, Copy)]
     pub struct CalibrationConfig: u8 {
         /// RC64k oscillator calibration
         const RC64K = 1 << 0;
@@ -535,7 +531,7 @@ impl ToByteArray for CalibrationConfig {
 /// - BUSY high during calibration
 /// - Automatically performed at power-up
 /// - Required after configuration changes
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct Calibrate {
     /// Calibration configuration
     pub config: CalibrationConfig,
@@ -558,7 +554,7 @@ impl Command for Calibrate {
 /// Image calibration configuration
 ///
 /// Defines frequency range for image calibration.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct ImageCalibConfig {
     /// Start frequency code
     pub freq1: u8,
@@ -585,7 +581,7 @@ impl ToByteArray for ImageCalibConfig {
 /// - Default calibration for 902-928MHz
 /// - Required after changing frequency band
 /// - Special handling needed with TCXO
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct CalibrateImage {
     /// Image calibration configuration
     pub config: ImageCalibConfig,
@@ -606,7 +602,7 @@ impl Command for CalibrateImage {
 }
 
 /// Device selection for PA configuration
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub enum DeviceSelect {
     /// SX1262 device (+22dBm max)
     Sx1262 = 0,
@@ -615,7 +611,7 @@ pub enum DeviceSelect {
 }
 
 /// PA configuration parameters
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct PaConfig {
     /// PA duty cycle (controls efficiency)
     /// See datasheet for optimal values
@@ -657,7 +653,7 @@ impl ToByteArray for PaConfig {
 /// - Affects efficiency and harmonics
 /// - SX1261: duty_cycle ≤ 0x04 below 400MHz
 /// - SX1262: duty_cycle ≤ 0x04 all frequencies
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct SetPaConfig {
     /// PA configuration
     pub config: PaConfig,
@@ -680,7 +676,7 @@ impl Command for SetPaConfig {
 /// Fallback mode after Rx/Tx
 ///
 /// Defines mode to enter after packet operation.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub enum FallbackMode {
     /// Go to FS mode
     /// Fastest transition to next TX/RX
@@ -713,7 +709,7 @@ impl ToByteArray for FallbackMode {
 /// - FS mode allows fastest transition
 /// - Affects power consumption when idle
 /// - Takes effect after TxDone/RxDone/Timeout
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct SetRxTxFallbackMode {
     /// Fallback mode selection
     pub mode: FallbackMode,

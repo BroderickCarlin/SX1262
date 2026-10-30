@@ -17,21 +17,21 @@ use regiface::FromByteArray;
 use crate::{Command, NoParameters};
 
 /// Error type for invalid operating mode values
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, defmt::Format)]
 pub enum OperatingModeError {
     /// The value does not correspond to a valid operating mode
     InvalidValue(u8),
 }
 
 /// Error type for invalid command status values
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, defmt::Format)]
 pub enum CommandStatusError {
     /// The value does not correspond to a valid command status
     InvalidValue(u8),
 }
 
 /// Error type for status byte parsing
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, defmt::Format)]
 pub enum StatusError {
     /// Error extracting operating mode from status byte
     InvalidMode(OperatingModeError),
@@ -43,7 +43,7 @@ pub enum StatusError {
 ///
 /// Represents the current state of the radio's state machine.
 /// Extracted from status byte bits 6:4.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, defmt::Format)]
 pub enum OperatingMode {
     /// STDBY_RC mode: RC oscillator running
     StandbyRc = 0x2,
@@ -76,7 +76,7 @@ impl TryFrom<u8> for OperatingMode {
 ///
 /// Indicates the result of the last command execution.
 /// Extracted from status byte bits 3:1.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, defmt::Format)]
 pub enum CommandStatus {
     /// Data is available to be read from the radio
     DataAvailable = 0x2,
@@ -115,7 +115,7 @@ impl TryFrom<u8> for CommandStatus {
 /// - Bits 6:4: Operating mode
 /// - Bits 3:1: Command status
 /// - Bits 0: Reserved
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct Status {
     /// Current operating mode of the device
     pub mode: OperatingMode,
@@ -147,7 +147,7 @@ impl FromByteArray for Status {
 /// - Command status shows result of last command
 /// - Use to monitor device state and detect errors
 /// - Helpful for debugging communication issues
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct GetStatus;
 
 impl Command for GetStatus {
@@ -167,7 +167,7 @@ impl Command for GetStatus {
 /// GetRssiInst response
 ///
 /// Contains the device status and instantaneous RSSI value.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct GetRssiInstResponse {
     /// Device status from the first response byte
     pub status: Status,
@@ -199,7 +199,7 @@ impl FromByteArray for GetRssiInstResponse {
 /// - Only valid in RX mode
 /// - Updates continuously during reception
 /// - Accuracy typically ±2dB
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct GetRssiInst;
 
 impl Command for GetRssiInst {
@@ -219,7 +219,7 @@ impl Command for GetRssiInst {
 /// RX buffer status response
 ///
 /// Contains information about received packet in buffer.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct RxBufferStatus {
     /// Length of received payload in bytes
     pub payload_length: u8,
@@ -244,7 +244,7 @@ impl FromByteArray for RxBufferStatus {
 /// GetRxBufferStatus response
 ///
 /// Contains the device status and RX buffer information.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct GetRxBufferStatusResponse {
     /// Device status from the first response byte
     pub status: Status,
@@ -273,7 +273,7 @@ impl FromByteArray for GetRxBufferStatusResponse {
 /// - Returns payload length and start address
 /// - Data remains valid until next RX operation
 /// - Use with ReadBuffer to retrieve payload
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct GetRxBufferStatus;
 
 impl Command for GetRxBufferStatus {
@@ -294,7 +294,7 @@ impl Command for GetRxBufferStatus {
 ///
 /// Contains status information about received packet.
 /// Interpretation depends on packet type (LoRa/FSK).
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct PacketStatus {
     /// Status bytes array:
     /// FSK Mode:
@@ -329,7 +329,7 @@ impl FromByteArray for PacketStatus {
 /// GetPacketStatus response
 ///
 /// Contains the device status and packet status information.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct GetPacketStatusResponse {
     /// Device status from the first response byte
     pub status: Status,
@@ -359,7 +359,7 @@ impl FromByteArray for GetPacketStatusResponse {
 /// - RSSI/SNR values latched at different times
 /// - FSK: RssiSync at sync word, RssiAvg over payload
 /// - LoRa: RssiPkt average over header+payload
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct GetPacketStatus;
 
 impl Command for GetPacketStatus {
@@ -379,7 +379,7 @@ impl Command for GetPacketStatus {
 /// Device errors response
 ///
 /// Contains flags for various error conditions.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct DeviceErrors {
     /// RC64k calibration error
     pub rc64k_calib_err: bool,
@@ -421,7 +421,7 @@ impl FromByteArray for DeviceErrors {
 /// GetDeviceErrors response
 ///
 /// Contains the device status and error flags.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct GetDeviceErrorsResponse {
     /// Device status from the first response byte
     pub status: Status,
@@ -450,7 +450,7 @@ impl FromByteArray for GetDeviceErrorsResponse {
 /// - XOSC_START_ERR normal with TCXO at startup
 /// - Multiple errors may be set simultaneously
 /// - Use ClearDeviceErrors to clear flags
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct GetDeviceErrors;
 
 impl Command for GetDeviceErrors {
@@ -470,7 +470,7 @@ impl Command for GetDeviceErrors {
 /// ClearDeviceErrors response
 ///
 /// Contains the two status bytes returned by the command.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct ClearDeviceErrorsResponse {
     /// First status byte
     pub status_1: Status,
@@ -498,7 +498,7 @@ impl FromByteArray for ClearDeviceErrorsResponse {
 /// - Clears all errors simultaneously
 /// - Cannot clear errors individually
 /// - Should be called after handling errors
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct ClearDeviceErrors;
 
 impl Command for ClearDeviceErrors {
@@ -518,7 +518,7 @@ impl Command for ClearDeviceErrors {
 /// Statistics response
 ///
 /// Contains packet reception statistics.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct Stats {
     /// Number of packets received
     /// Increments for all received packets
@@ -550,7 +550,7 @@ impl FromByteArray for Stats {
 /// GetStats response
 ///
 /// Contains the device status and packet statistics.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, defmt::Format)]
 pub struct GetStatsResponse {
     /// Device status from the first response byte
     pub status: Status,
@@ -580,7 +580,7 @@ impl FromByteArray for GetStatsResponse {
 /// - Reset with ResetStats command
 /// - Useful for monitoring link quality
 /// - CRC/header error rates indicate issues
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct GetStats;
 
 impl Command for GetStats {
@@ -605,7 +605,7 @@ impl Command for GetStats {
 /// - Resets all counters simultaneously
 /// - Cannot reset counters individually
 /// - Use before starting new test/monitoring
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, defmt::Format)]
 pub struct ResetStats;
 
 impl Command for ResetStats {
