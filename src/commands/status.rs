@@ -541,10 +541,11 @@ impl FromByteArray for Stats {
     type Array = [u8; 6];
 
     fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
+        // These really are infallible, so we can use unwrap_unchecked.
         Ok(Self {
-            packets_received: u16::from_be_bytes(bytes[0..2].try_into().expect("infallible")),
-            packets_crc_error: u16::from_be_bytes(bytes[2..4].try_into().expect("infallible")),
-            packets_header_error: u16::from_be_bytes(bytes[4..6].try_into().expect("infallible")),
+            packets_received: u16::from_be_bytes(bytes[0..2].try_into().unwrap_unchecked()),
+            packets_crc_error: u16::from_be_bytes(bytes[2..4].try_into().unwrap_unchecked()),
+            packets_header_error: u16::from_be_bytes(bytes[4..6].try_into().unwrap_unchecked()),
         })
     }
 }
